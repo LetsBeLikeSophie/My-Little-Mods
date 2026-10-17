@@ -201,21 +201,24 @@ export type BandData = { status: Status; what: string; detail: string; limits: s
 
 /** The line above the prompt as a sunny pill with a tiny face at the front. */
 export function bandSvg(d: BandData): string {
-  const H = 28
-  const rightW = widthOf(d.limits, 11) + 16
-  const room = W - 36 - rightW - 10
-  const cx = 16
+  // Wide and thin, to sit across the prompt's width as one slim line.
+  const BW = 640
+  const H = 20
+  const rightW = widthOf(d.limits, 10.5) + 18
+  const room = BW - 30 - rightW - 14
+  const cx = 11
   const cy = H / 2
   const face =
-    `<circle cx="${cx}" cy="${cy}" r="9" fill="${d.status === 'approval' ? '#E0533D' : J.sunDeep}"/>` +
-    `<circle cx="${cx - 3}" cy="${cy - 1}" r="1.2" fill="${J.ink}"/><circle cx="${cx + 3}" cy="${cy - 1}" r="1.2" fill="${J.ink}"/>` +
-    `<path d="M${cx - 2.5} ${cy + 2.5} Q${cx} ${cy + 4.5} ${cx + 2.5} ${cy + 2.5}" stroke="${J.ink}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`
-  return svg(
-    H,
-    `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="${(H - 2) / 2}" fill="${J.sun}"/>` +
-      face +
-      text(32, 18.5, 12, 600, J.ink, clip(`${d.what}${d.detail ? ` · ${d.detail}` : ''}`, 12, room)) +
-      `<rect x="${W - rightW - 6}" y="5" width="${rightW}" height="${H - 10}" rx="${(H - 10) / 2}" fill="#FFFFFF"/>` +
-      text(W - 6 - rightW / 2, 18, 11, 600, J.ink, d.limits, 'middle'),
+    `<circle cx="${cx}" cy="${cy}" r="7" fill="${d.status === 'approval' ? '#E0533D' : J.sunDeep}"/>` +
+    `<circle cx="${cx - 2.3}" cy="${cy - 1}" r="0.9" fill="${J.ink}"/><circle cx="${cx + 2.3}" cy="${cy - 1}" r="0.9" fill="${J.ink}"/>` +
+    `<path d="M${cx - 2} ${cy + 1.8} Q${cx} ${cy + 3.4} ${cx + 2} ${cy + 1.8}" stroke="${J.ink}" stroke-width="0.9" fill="none" stroke-linecap="round"/>`
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${BW * 2}" height="${H * 2}" viewBox="0 0 ${BW} ${H}">` +
+    `<rect x="0.5" y="0.5" width="${BW - 1}" height="${H - 1}" rx="${(H - 1) / 2}" fill="${J.sun}"/>` +
+    face +
+    text(24, 14, 11, 600, J.ink, clip(`${d.what}${d.detail ? ` · ${d.detail}` : ''}`, 11, room)) +
+    `<rect x="${BW - rightW - 3}" y="3" width="${rightW}" height="${H - 6}" rx="${(H - 6) / 2}" fill="#FFFFFF"/>` +
+    text(BW - 3 - rightW / 2, 13.8, 10.5, 600, J.ink, d.limits, 'middle') +
+    `</svg>`
   )
 }

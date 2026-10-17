@@ -177,15 +177,17 @@ export type BandData = { what: string; detail: string; limits: string }
 
 /** The line above the prompt as a thin pill: the card's white, the theme-colored rim, light type. */
 export function bandSvg(d: BandData, p: Palette, isAsking = false): string {
-  const H = 26
-  const rightW = widthOf(d.limits, 11) + 14
-  const room = W - 26 - rightW - 12
+  // Wide and thin, to sit across the prompt's width as one slim line.
+  const BW = 640
+  const H = 20
+  const rightW = widthOf(d.limits, 10.5) + 14
+  const room = BW - 24 - rightW - 12
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">` +
-    `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="${(H - 2) / 2}" fill="${isAsking ? p.glow : p.card}" stroke="${p.rim}" stroke-width="1.5"/>` +
-    `<circle cx="14" cy="${H / 2}" r="4" fill="${p.accent}"/>` +
-    text(24, 17, 12, 400, p.ink, clip(`${d.what}${d.detail ? ` · ${d.detail}` : ''}`, 12, room)) +
-    text(W - 12, 17, 11, 400, p.soft, d.limits, 'end') +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${BW * 2}" height="${H * 2}" viewBox="0 0 ${BW} ${H}">` +
+    `<rect x="0.75" y="0.75" width="${BW - 1.5}" height="${H - 1.5}" rx="${(H - 1.5) / 2}" fill="${isAsking ? p.glow : p.card}" stroke="${p.rim}" stroke-width="1.2"/>` +
+    `<circle cx="11" cy="${H / 2}" r="3.5" fill="${p.accent}"/>` +
+    text(21, 14, 11, 400, p.ink, clip(`${d.what}${d.detail ? ` · ${d.detail}` : ''}`, 11, room)) +
+    text(BW - 11, 14, 10.5, 400, p.soft, d.limits, 'end') +
     `</svg>`
   )
 }
