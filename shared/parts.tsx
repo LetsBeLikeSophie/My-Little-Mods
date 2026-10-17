@@ -7,6 +7,8 @@
 
 import type { ElementTable, EngineInterface } from 'claude-code'
 
+import { alert } from './alerts'
+import type { Alert } from './alerts'
 import { logLine } from './core'
 
 export type Parts = Pick<ElementTable<'desktop'>, 'Box' | 'Text' | 'Button'>
@@ -104,4 +106,9 @@ export async function isPaneShown($: EngineInterface, id: string): Promise<boole
   } catch {
     return false
   }
+}
+
+/** An alert from the mod on screen only, so three mods never ring at once. */
+export async function alertIfShown($: EngineInterface, id: string, a: Alert): Promise<void> {
+  if (await isPaneShown($, id)) await alert($, a)
 }

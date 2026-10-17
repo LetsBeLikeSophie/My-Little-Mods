@@ -18,8 +18,7 @@ import {
 } from './core'
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
-import { alert } from './alerts'
-import { AlertsButton, Credit, LogLines, OpenButton, isPaneShown } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown } from './parts'
 import { J, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
@@ -155,7 +154,7 @@ export const register: Register = on => {
       await $.store.set('life', l)
       if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
         const lg = await read($, lang)
-        void alert($, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
+        void alertIfShown($, PANE, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
       }
     }
 
@@ -225,7 +224,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alert($, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }

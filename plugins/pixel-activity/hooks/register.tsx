@@ -5,9 +5,8 @@ import type { Act, ActKind, Job, Output, Species, Turn } from '../types'
 import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, walkSeconds } from './camp'
 import { busyMs, statsSvg } from './stats'
 import { bandSvg, gainText, hudSvg } from './hud'
-import { alert } from './alerts'
 import { DOC_EXT, artifactIn, baseName, detailOf, isCheckCommand, kindOf, nextPlan, pctOf, toolName } from './core'
-import { AlertsButton, Credit, LogLines, OpenButton, isPaneShown } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown } from './parts'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
@@ -278,9 +277,9 @@ export const register: Register = on => {
       const lg = await read($, lang)
       const isNative = await read($, alerts)
       if (after > before) {
-        void alert($, { title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
       } else if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
-        void alert($, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
       }
     }
 
@@ -363,7 +362,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alert($, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }
