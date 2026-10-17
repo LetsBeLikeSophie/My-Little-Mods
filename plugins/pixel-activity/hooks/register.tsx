@@ -6,13 +6,14 @@ import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, 
 import { busyMs, statsSvg } from './stats'
 import { gainText, hudSvg } from './hud'
 import { alert } from './alerts'
+import { DOC_EXT, artifactIn, baseName, detailOf, isCheckCommand, kindOf, nextPlan, pctOf, toolName } from './core'
+import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
 import type { Lang } from './i18n'
 
 const PANE = 'pixel-activity'
-const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 const TITLE = 'Adventure Log'
 
 const acts = atom({ plugin: 'pixel-activity', key: 'acts' } as const, [])
@@ -51,28 +52,14 @@ export const THEMES: { [K in Theme]: { BG: string; CARD: string; FG: string; DIM
 const DONE_MS = 8_000
 const LINGER_MS = 6_000
 
-// A command that tests or checks the work: a fight with a bug.
-const BATTLE = /\b(test|tests|pytest|jest|vitest|mocha|tsc|lint|eslint|ruff|mypy|validate|check|build)\b/i
 
-export function isBattleCommand(tool: string, command: unknown): boolean {
-  return /^(Bash|PowerShell)$/.test(tool) && typeof command === 'string' && BATTLE.test(command)
-}
 const NAP_MS = 5 * 60_000
 
-const DOC_EXT = /\.(md|markdown|html?|pdf|docx|pptx|xlsx|csv|png|jpe?g|gif|svg|txt)$/i
-const ARTIFACT_URL = /https:\/\/claude\.ai\/[^\s"'<>)\]\\]*artifact[^\s"'<>)\]\\]*/
+// The shared ones, under the names this mod's tests and hooks use.
+export { artifactIn, detailOf, kindOf, nextPlan, toolName } from './core'
+/** A command that tests or checks the work: a fight with a bug. */
+export const isBattleCommand = isCheckCommand
 
-/** The tools Claude reaches for, by name, in plain words. */
-export function kindOf(tool: string): ActKind {
-  if (/^(Read|NotebookRead)$/.test(tool)) return 'read'
-  if (/^(Grep|Glob|ToolSearch|LS)$/.test(tool)) return 'search'
-  if (/^(Edit|MultiEdit|NotebookEdit)$/.test(tool)) return 'edit'
-  if (tool === 'Write') return 'write'
-  if (/^(Bash|PowerShell|Monitor)$/.test(tool)) return 'bash'
-  if (/^(WebFetch|WebSearch)$/.test(tool) || /^mcp__(Claude_Browser|claude-in-chrome)__/.test(tool)) return 'web'
-  if (/^(Agent|Task|Workflow|SendMessage)$/.test(tool)) return 'agent'
-  return 'other'
-}
 
 const KIND_EMOJI: { [K in ActKind]: string } = {
   read: '📖',
@@ -85,55 +72,12 @@ const KIND_EMOJI: { [K in ActKind]: string } = {
   other: '📦',
 }
 
-/** A tool's short display name: `mcp__x__navigate` reads as `navigate`. */
-export function toolName(tool: string): string {
-  return tool.startsWith('mcp__') ? (tool.split('__').pop() ?? tool) : tool
-}
-
-export function baseName(path: string): string {
-  return path.split(/[\\/]/).filter(Boolean).pop() ?? path
-}
-
-export function detailOf(args: { [k: string]: unknown }, max = 40, whole = false): string {
-  const pick = (k: string) => (typeof args[k] === 'string' ? (args[k] as string) : undefined)
-  const path = pick('file_path') ?? pick('notebook_path') ?? pick('path')
-  const text =
-    (path && (whole ? path : baseName(path))) ??
-    pick('description') ??
-    pick('command') ??
-    pick('pattern') ??
-    pick('query') ??
-    pick('url') ??
-    pick('prompt') ??
-    ''
-  const line = text.replace(/\s+/g, ' ').trim()
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line
-}
-
-/** A link for a published artifact named in a tool's answer, if any. */
-export function artifactIn(text: string): string | undefined {
-  return ARTIFACT_URL.exec(text)?.[0]
-}
 
 
-type Plan = { items: string[]; current: number }
 
-/** The step in progress, after a task-list call (the app's update_plan or TodoWrite). */
-export function nextPlan(prev: Plan, tool: string, args: { [k: string]: unknown }): Plan | undefined {
-  type Item = { content?: unknown; status?: unknown; activeForm?: unknown }
-  const list = (Array.isArray(args.items) ? args.items : Array.isArray(args.todos) ? args.todos : undefined) as Item[] | undefined
-  if (!/(update_plan|TodoWrite)$/.test(tool)) return undefined
-  if (list) {
-    const items = list.map(i => String(i.activeForm ?? i.content ?? ''))
-    return { items, current: list.findIndex(i => i.status === 'in_progress') }
-  }
-  if (args.advance === true) {
-    const current = prev.current + 1
-    return { ...prev, current: current < prev.items.length ? current : -1 }
-  }
-  if (typeof args.start === 'number') return { ...prev, current: args.start - 1 }
-  return undefined
-}
+
+
+
 
 /** Which picture to draw, from the turn and the calls in it. */
 type Life = { quests: number; slain: number; actions: number }
@@ -178,7 +122,6 @@ export function sceneFor(t: Turn, list: readonly Act[], at: number, isAsking = f
   return at - t.endedAt > NAP_MS ? 'sleeping' : 'waiting'
 }
 
-const LOG_LINES = 6
 
 /** The legend, in three groups: work, tests, downtime. */
 const LEGEND_GROUPS: readonly (readonly ['groupWork' | 'groupFight' | 'groupRest', readonly Scene[]])[] = [
@@ -187,18 +130,7 @@ const LEGEND_GROUPS: readonly (readonly ['groupWork' | 'groupFight' | 'groupRest
   ['groupRest', ['done', 'waiting', 'sleeping']],
 ]
 
-function clock(ms: number): string {
-  const d = new Date(ms)
-  return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
-}
 
-/** One log line, oldest first like a debug log: time, result, tool, what it touched. */
-export function logLine(a: Act, lg: Lang = 'ko', whole = false): string {
-  const mark = a.endedAt === null ? '…' : a.isError ? '✗' : '✓'
-  const took = a.endedAt === null ? '' : ` (${seconds(lg, a.endedAt - a.startedAt)})`
-  const who = a.isSub ? ` ${UI[lg].ally}` : ''
-  return `${clock(a.startedAt)} ${mark} ${toolName(a.tool)}${a.detail ? ` ${whole ? a.full || a.detail : a.detail}` : ''}${took}${who}`
-}
 
 function isSpecies(v: unknown): v is Species {
   return typeof v === 'string' && (SPECIES_IDS as string[]).includes(v)
@@ -236,9 +168,6 @@ async function systemLang($: EngineInterface): Promise<Lang | undefined> {
 
 type Quota = { limits: { kind: string; percentUsed: number; resetsAt: string | null }[]; contextPct: number | null; usd: number | null }
 
-export function pctOf(q: Quota, kind: string): number | null {
-  return q.limits.find(l => l.kind === kind)?.percentUsed ?? null
-}
 
 function quotaFrom(u: { rateLimits: readonly SessionRateLimit[]; context: { percent?: number }; cost?: { usd: number } }): Quota {
   return {
@@ -519,7 +448,6 @@ export const register: Register = on => {
     const hero = `${SPECIES_NAMES[lg][sp]} ${JOB_NAMES[lg][jb]}`
     const turnActs = list.filter(a => t.ids.includes(a.id))
     const live = [...list].reverse().find(a => a.endedAt === null)
-    const log = list.slice(-LOG_LINES)
     const elapsed = t.startedAt ? (t.isWorking ? at : (t.endedAt ?? t.startedAt)) - t.startedAt : 0
 
     const now1 = live ? `${toolName(live.tool)}${live.detail ? ` · ${live.detail}` : ''}${live.isSub ? ` ${L.ally}` : ''}` : ''
@@ -549,7 +477,8 @@ export const register: Register = on => {
       )
     }
 
-    const { Box, Text, Svg, Button } = $.ui.resolve(e)
+    const E = $.ui.resolve(e)
+    const { Box, Text, Svg, Button } = E
     const heading = (text: string) => (
       <Text weight="semibold" color={GOLD}>
         {text}
@@ -663,9 +592,7 @@ export const register: Register = on => {
                   {i === 0 ? L.latest : ''}
                   {ago(lg, at - o.at)}
                 </Text>
-                <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
-                  {L.open}
-                </Button>
+                {OpenButton(E, $, o.href, L.open, `open-${i}`)}
               </Box>
             ))
           )}
@@ -673,41 +600,15 @@ export const register: Register = on => {
 
         <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
           {heading(L.log)}
-          {log.length === 0 && (
-            <Text mono color={DIM}>
-              {L.logEmpty}
-            </Text>
-          )}
-          {log.map(a => (
-            <Text
-              key={`log-${a.id}`}
-              mono
-              size="footnote"
-              wrap={opened ? 'wrap' : 'truncate-end'}
-              color={a.isError ? RED : a.endedAt === null ? FG : DIM}
-            >
-              {logLine(a, lg, Boolean(opened))}
-            </Text>
-          ))}
-          {log.length > 0 && (
-            <Button key="log-toggle" variant="secondary" onPress={() => update($, logOpen, (v: string) => (v ? '' : 'all'))}>
-              {opened ? L.logLess : L.logMore}
-            </Button>
-          )}
+          {LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: FG, soft: DIM, error: RED }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) })}
         </Box>
 
         <Box flexDirection="row" gap="sm" flexWrap="wrap">
-          <Button
-            key="toggle-alerts"
-            variant="secondary"
-            onPress={async () => {
+          {AlertsButton(E, isAlerting, { on: L.alertsOn, off: L.alertsOff }, async () => {
               const next = !isAlerting
               await update($, alerts, () => next)
               await $.store.set('alerts', next)
-            }}
-          >
-            {isAlerting ? L.alertsOn : L.alertsOff}
-          </Button>
+            })}
           <Button key="toggle-legend" variant="secondary" onPress={toggle('legend')}>
             {sh.legend ? L.legendClose : L.legendOpen}
           </Button>
@@ -788,14 +689,7 @@ export const register: Register = on => {
             </Box>
           </Box>
         )}
-        <Box flexDirection="row" gap="sm" alignItems="center">
-          <Text key="credit" size="footnote" color={DIM}>
-            {L.madeBy}
-          </Text>
-          <Button key="credit-link" variant="secondary" onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
-            GitHub
-          </Button>
-        </Box>
+        {Credit(E, $, L.madeBy, DIM)}
       </Box>
     )
   })

@@ -12,6 +12,8 @@ export type TimeKey =
   | 'agent'
   | 'other'
 
+export { busyMs } from './core'
+
 export const TIME_COLOR: { [K in TimeKey]: string } = {
   thinking: '#9B8AE0',
   read: '#4DA8FF',
@@ -25,27 +27,7 @@ export const TIME_COLOR: { [K in TimeKey]: string } = {
   other: '#A89F8E',
 }
 
-type Interval = { startedAt: number; endedAt: number | null }
 
-/** Wall time covered by `acts` (overlapping calls counted once), up to `at` for one still running. */
-export function busyMs(acts: readonly Interval[], at: number): number {
-  const spans = acts
-    .map(a => [a.startedAt, a.endedAt ?? at] as const)
-    .filter(([s, e]) => e > s)
-    .sort((x, y) => x[0] - y[0])
-  let total = 0
-  let curS = -1
-  let curE = -1
-  for (const [s, e] of spans) {
-    if (s > curE) {
-      if (curE > curS) total += curE - curS
-      curS = s
-      curE = e
-    } else if (e > curE) curE = e
-  }
-  if (curE > curS) total += curE - curS
-  return total
-}
 
 function esc(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

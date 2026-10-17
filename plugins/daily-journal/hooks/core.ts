@@ -1,7 +1,14 @@
-// What the dashboard knows, worked out from tool calls and requests: the same
-// bookkeeping as pixel-activity, without the pictures.
+// Copied from shared/core.ts by scripts/sync-shared.mjs: edit that file, not this one.
+// What every mod knows, worked out from tool calls and requests: which kind of
+// work a tool is, its one-line detail, the step in progress, time spent, the
+// usage limits' gain. Shared by all mods (see scripts/sync-shared.mjs); the
+// types here are the shapes it needs, so each mod's own records fit them.
 
-import type { Act, ActKind, Quota, Turn } from '../types'
+export type ActKind = 'read' | 'search' | 'edit' | 'write' | 'bash' | 'web' | 'agent' | 'other'
+
+type ActLike = { id: string; kind: ActKind; endedAt: number | null; isError: boolean; isCheck?: boolean; isBattle?: boolean }
+type TurnLike = { isWorking: boolean; startedAt: number; endedAt: number | null; ids: readonly string[] }
+type QuotaLike = { limits: readonly { kind: string; percentUsed: number }[] }
 
 export type Status = ActKind | 'check' | 'thinking' | 'error' | 'done' | 'waiting' | 'approval'
 
@@ -77,11 +84,11 @@ export function nextPlan(prev: Plan, tool: string, args: { [k: string]: unknown 
 }
 
 /** What to say Claude is doing right now. */
-export function statusOf(t: Turn, list: readonly Act[], at: number, isAsking = false): Status {
+export function statusOf(t: TurnLike, list: readonly ActLike[], at: number, isAsking = false): Status {
   if (isAsking) return 'approval'
   const live = [...list].reverse().find(a => a.endedAt === null)
   if (t.isWorking) {
-    if (live) return live.isCheck ? 'check' : live.kind
+    if (live) return live.isCheck || live.isBattle ? 'check' : live.kind
     const last = list.filter(a => t.ids.includes(a.id)).pop()
     if (last?.isError && last.endedAt !== null && at - last.endedAt < 4_000) return 'error'
     return 'thinking'
@@ -110,7 +117,7 @@ export function busyMs(acts: readonly { startedAt: number; endedAt: number | nul
   return total
 }
 
-export function pctOf(q: Quota, kind: string): number | null {
+export function pctOf(q: QuotaLike, kind: string): number | null {
   return q.limits.find(l => l.kind === kind)?.percentUsed ?? null
 }
 
@@ -139,4 +146,20 @@ export function lighten(hex: string, t: number): string {
     return Math.round(t >= 0 ? v + (255 - v) * t : v * (1 + t))
   }
   return `#${[16, 8, 0].map(s => ch(s).toString(16).padStart(2, '0')).join('')}`
+}
+
+type LogAct = { tool: string; detail: string; full: string; startedAt: number; endedAt: number | null; isError: boolean; isSub: boolean }
+
+function clock(ms: number): string {
+  const d = new Date(ms)
+  return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
+}
+
+/** One log line: time, result, tool, what it touched, how long, and who (an agent). */
+export function logLine(a: LogAct, whole: boolean, f: { seconds: (ms: number) => string; ally: string }): string {
+  const mark = a.endedAt === null ? '…' : a.isError ? '✗' : '✓'
+  const took = a.endedAt === null ? '' : ` (${f.seconds(a.endedAt - a.startedAt)})`
+  const who = a.isSub ? ` ${f.ally}` : ''
+  const what = a.detail ? ` ${whole ? a.full || a.detail : a.detail}` : ''
+  return `${clock(a.startedAt)} ${mark} ${toolName(a.tool)}${what}${took}${who}`
 }

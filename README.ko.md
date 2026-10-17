@@ -67,6 +67,16 @@ Claude 데스크톱 앱에서는 `/plugin`이 안 돼요. 입력창 옆 **+ → 
 - 사용 한도는 구독 요금제(Pro/Max)에서만 보이고, 첫 응답이 온 뒤에 나타나요.
 - 모든 정보는 내 컴퓨터 안에서만 처리돼요. 결과물 링크를 누르면 브라우저나 연결된 앱으로 열려요(Windows).
 
+## 개발할 때
+
+세 모드가 같이 쓰는 코드는 `shared/`에 있어요(기록 로직 `core.ts`, 알림 `alerts.ts`, 로그·열기 버튼·알림 버튼·제작자 줄 `parts.tsx`). 모드는 따로 설치되기 때문에 각자 `hooks/` 폴더에 복사본을 갖고 있어요. `shared/`의 파일을 고친 뒤 아래 명령으로 복사해요.
+
+```bash
+node scripts/sync-shared.mjs
+```
+
+`node scripts/sync-shared.mjs --check`는 복사본이 원본과 다르면 실패해요.
+
 ## 라이선스
 
 코드는 [MIT](LICENSE). pixel-activity에 들어 있는 픽셀 폰트 [Galmuri11](https://github.com/quiple/galmuri)은 SIL Open Font License 1.1을 따라요([OFL-Galmuri.txt](plugins/pixel-activity/OFL-Galmuri.txt)).

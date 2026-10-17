@@ -75,3 +75,15 @@ test('a pending approval is the status', async () => {
   const idle = { isWorking: true, startedAt: 1, endedAt: null, ids: [] }
   expect(statusOf(idle, [], 2, true)).toBe('approval')
 })
+
+test('the log shows the newest action on top', async ($, on) => {
+  on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
+  await $.tool.call({ tool: 'Bash', command: 'echo first' })
+  await $.tool.call({ tool: 'Bash', command: 'echo second' })
+  const ui = await $.ui.mount({ plugin: 'simple-dash', surface: 'desktop', ...PANE })
+  const lines = (await ui.findAll({ type: 'Text', text: /echo (first|second)/ })).map(x => x.text)
+  const logLines = lines.filter(t => /✓/.test(t))
+  expect(logLines[0]).toContain('second')
+  expect(logLines[1]).toContain('first')
+  await ui.unmount()
+})

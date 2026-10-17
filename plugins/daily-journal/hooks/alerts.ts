@@ -1,3 +1,4 @@
+// Copied from shared/alerts.ts by scripts/sync-shared.mjs: edit that file, not this one.
 // Getting the person's attention: an in-app toast always; then a native
 // notification and a sound. The engine's own notify and audio reach no one
 // from the Windows desktop app (no terminal, no player), so on Windows both go

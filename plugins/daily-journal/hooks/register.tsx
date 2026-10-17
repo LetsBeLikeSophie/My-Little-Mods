@@ -19,12 +19,11 @@ import {
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { alert } from './alerts'
+import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
 import { J, chipsSvg, greetingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
 const TITLE = 'Journal'
-const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
-const LOG_LINES = 6
 
 const acts = atom({ plugin: 'daily-journal', key: 'acts' } as const, [])
 const turn = atom({ plugin: 'daily-journal', key: 'turn' } as const, { isWorking: false, startedAt: 0, endedAt: null, ids: [] })
@@ -71,18 +70,7 @@ function quotaFrom(u: { rateLimits: readonly SessionRateLimit[]; context: { perc
   }
 }
 
-function clock(ms: number): string {
-  const d = new Date(ms)
-  return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
-}
 
-/** One log line: time, result, tool, what it touched, how long. */
-export function logLine(a: Act, lg: Lang, whole = false): string {
-  const mark = a.endedAt === null ? '…' : a.isError ? '✗' : '✓'
-  const took = a.endedAt === null ? '' : ` (${seconds(lg, a.endedAt - a.startedAt)})`
-  const who = a.isSub ? ` ${UI[lg].ally}` : ''
-  return `${clock(a.startedAt)} ${mark} ${toolName(a.tool)}${a.detail ? ` ${whole ? a.full || a.detail : a.detail}` : ''}${took}${who}`
-}
 
 /** The system's display language: Windows' own setting, else LANG / LC_ALL. */
 async function systemLang($: EngineInterface): Promise<Lang | undefined> {
@@ -322,7 +310,6 @@ export const register: Register = on => {
         ? (thinkingWord ? `${thinkingWord}…` : step ? `${L.step}${step}` : '')
         : ''
     const elapsed = t.startedAt ? (t.isWorking ? at : (t.endedAt ?? t.startedAt)) - t.startedAt : 0
-    const log = list.slice(-LOG_LINES)
     const timeRows = Object.entries(used).filter(([, ms]) => ms >= 500).sort((x, y) => y[1] - x[1]).slice(0, 6)
     const timeTotal = timeRows.reduce((n, [, ms]) => n + ms, 0) || 1
     const timeMax = Math.max(1, ...timeRows.map(([, ms]) => ms))
@@ -342,7 +329,8 @@ export const register: Register = on => {
       )
     }
 
-    const { Box, Text, Button, Svg } = $.ui.resolve(e)
+    const E = $.ui.resolve(e)
+    const { Box, Text, Button, Svg } = E
     const PASTELS = [J.pink, J.lilac, J.mint] as const
     const card = (key: string, title: string, children: RenderChildren) => (
       <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.line}>
@@ -423,9 +411,7 @@ export const register: Register = on => {
                 <Text size="footnote" color={J.soft}>
                   {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
                 </Text>
-                <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
-                  {L.open}
-                </Button>
+                {OpenButton(E, $, o.href, L.open, `open-${i}`)}
               </Box>
           ))}
         </Box>
@@ -433,28 +419,7 @@ export const register: Register = on => {
         {card(
           'log',
           L.log,
-          log.length === 0 ? (
-            <Text size="footnote" color={J.soft}>
-              {L.logEmpty}
-            </Text>
-          ) : (
-            <Box flexDirection="column">
-              {log.map(a => (
-                <Text
-                  key={`log-${a.id}`}
-                  mono
-                  size="footnote"
-                  wrap={opened ? 'wrap' : 'truncate-end'}
-                  color={a.isError ? '#C0392B' : a.endedAt === null ? J.ink : J.soft}
-                >
-                  {logLine(a, lg, Boolean(opened))}
-                </Text>
-              ))}
-              <Button key="log-toggle" variant="secondary" onPress={() => update($, logOpen, (v: string) => (v ? '' : 'all'))}>
-                {opened ? L.logLess : L.logMore}
-              </Button>
-            </Box>
-          ),
+          LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: J.ink, soft: J.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
         )}
 
         <Text size="footnote" color={J.soft}>
@@ -462,23 +427,12 @@ export const register: Register = on => {
         </Text>
 
         <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap">
-          <Button
-            key="toggle-alerts"
-            variant="secondary"
-            onPress={async () => {
+          {AlertsButton(E, isAlerting, { on: L.alertsOn, off: L.alertsOff }, async () => {
               const next = !isAlerting
               await update($, alerts, () => next)
               await $.store.set('alerts', next)
-            }}
-          >
-            {isAlerting ? L.alertsOn : L.alertsOff}
-          </Button>
-          <Text key="credit" size="footnote" color={J.soft}>
-            {L.madeBy}
-          </Text>
-          <Button key="credit-link" variant="secondary" onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
-            GitHub
-          </Button>
+            })}
+          {Credit(E, $, L.madeBy, J.soft)}
         </Box>
       </Box>
     )

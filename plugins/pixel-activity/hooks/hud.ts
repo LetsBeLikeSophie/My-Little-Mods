@@ -1,6 +1,10 @@
 // The HUD under the picture: the usage limits as XP-style bars (the blocks the
 // last request filled glow, with its +%), and the session's context window.
 
+import { gainText } from './core'
+
+export { gainText }
+
 export type HudBar = {
   icon: 'heart' | 'star' | 'drop'
   label: string
@@ -27,13 +31,6 @@ function esc(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-/** How much a bar rose since `base`: "+3%", "+0.4%", or "" when it did not. */
-export function gainText(pct: number | null, base: number | null | undefined): string {
-  if (pct === null || base === null || base === undefined) return ''
-  const d = Math.round((pct - base) * 10) / 10
-  if (d <= 0) return ''
-  return `+${d >= 1 ? Math.round(d) : d}%`
-}
 
 /** Groups of bars, each under a heading that says what full means for them. */
 export function hudSvg(sections: readonly HudSection[], font: string, colors: { fg: string; dim: string; empty: string; head: string }): string {

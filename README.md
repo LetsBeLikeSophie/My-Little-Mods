@@ -67,6 +67,16 @@ In the Claude desktop app, where `/plugin` does not run: click **+** next to the
 - Usage limits show on subscription plans (Pro/Max), after the first reply.
 - Everything stays on your computer. Result links open in your browser or the file's app (Windows).
 
+## Developing
+
+Code all mods share lives in `shared/` (the bookkeeping in `core.ts`, alerts in `alerts.ts`, the log, Open button, alerts switch and credit in `parts.tsx`). Each mod is installed on its own, so it carries a copy in its `hooks/` folder. Edit the file in `shared/`, then copy it out:
+
+```bash
+node scripts/sync-shared.mjs
+```
+
+`node scripts/sync-shared.mjs --check` fails if a copy is out of date.
+
 ## License
 
 Code: [MIT](LICENSE). The pixel font [Galmuri11](https://github.com/quiple/galmuri) bundled in pixel-activity is under the SIL Open Font License 1.1 ([OFL-Galmuri.txt](plugins/pixel-activity/OFL-Galmuri.txt)).
