@@ -77,6 +77,7 @@ test('a pending approval is the status', async () => {
 })
 
 test('the log shows the newest action on top', async ($, on) => {
+  mock.store(on)
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo first' })
   await $.tool.call({ tool: 'Bash', command: 'echo second' })
