@@ -19,7 +19,7 @@ import {
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { alert } from './alerts'
-import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, isPaneShown } from './parts'
 import { J, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
@@ -246,6 +246,8 @@ export const register: Register = on => {
   // with the pane closed. Plain text in the app's own colors, a sunny dot in front.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
+    // Only the mod whose pane is on screen draws the band; the others pass it on.
+    if (!(await isPaneShown($, PANE))) return next(e)
     const list = await read($, acts)
     const t = await read($, turn)
     const lg = await read($, lang)

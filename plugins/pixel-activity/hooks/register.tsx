@@ -7,7 +7,7 @@ import { busyMs, statsSvg } from './stats'
 import { bandSvg, gainText, hudSvg } from './hud'
 import { alert } from './alerts'
 import { DOC_EXT, artifactIn, baseName, detailOf, isCheckCommand, kindOf, nextPlan, pctOf, toolName } from './core'
-import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, isPaneShown } from './parts'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
@@ -385,6 +385,8 @@ export const register: Register = on => {
   // still shows with the pane closed. Plain text in the app's own colors.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
+    // Only the mod whose pane is on screen draws the band; the others pass it on.
+    if (!(await isPaneShown($, PANE))) return next(e)
     const list = await read($, acts)
     const t = await read($, turn)
     const jb = await read($, job)

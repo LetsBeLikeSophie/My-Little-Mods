@@ -59,6 +59,7 @@ const BAND = {
 }
 
 test('a one-line band above the prompt says what is going on', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
@@ -77,4 +78,16 @@ test('a one-line band above the prompt says what is going on', async ($, on) => 
 test('a pending approval is the status', async () => {
   const idle = { isWorking: true, startedAt: 1, endedAt: null, ids: [] }
   expect(statusOf(idle, [], 2, true)).toBe('approval')
+})
+
+test('the band is left to the mod whose pane is on screen', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>the engine's own</Text>
+  })
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect((await ui.findAll({ type: 'Svg' })).length).toBe(0)
+  expect(await ui.find({ type: 'Text', text: /the engine's own/ })).toBeDefined()
+  await ui.unmount()
 })

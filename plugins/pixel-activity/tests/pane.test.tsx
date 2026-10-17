@@ -235,6 +235,7 @@ const BAND = {
 }
 
 test('a one-line band above the prompt says what is going on', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
@@ -266,6 +267,7 @@ test('XP adds up to levels that each ask a little more', async () => {
 })
 
 test('an ask from the engine shows as waiting for approval', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.check', () => ({ decision: 'ask' }))
   const v = await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' }, tool_use_id: 't1' })
   expect(v.decision).toBe('ask')
@@ -276,5 +278,17 @@ test('an ask from the engine shows as waiting for approval', async ($, on) => {
     props: { hasSurvey: false, isWorking: true, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
   })
   expect(await ui.find({ type: 'Text', text: /승인 기다리는 중|Waiting for your approval/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('the band is left to the mod whose pane is on screen', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>the engine's own</Text>
+  })
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect((await ui.findAll({ type: 'Svg' })).length).toBe(0)
+  expect(await ui.find({ type: 'Text', text: /the engine's own/ })).toBeDefined()
   await ui.unmount()
 })

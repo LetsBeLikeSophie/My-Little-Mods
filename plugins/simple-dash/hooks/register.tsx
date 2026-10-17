@@ -21,7 +21,7 @@ import {
 import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { alert } from './alerts'
-import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, isPaneShown } from './parts'
 import { bandSvg, headingSvg, ringsSvg, statusSvg, timeSvg } from './calm'
 import type { Palette } from './calm'
 
@@ -255,6 +255,8 @@ export const register: Register = on => {
   // with the pane closed. Plain text in the app's own colors, the accent on the dot.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
+    // Only the mod whose pane is on screen draws the band; the others pass it on.
+    if (!(await isPaneShown($, PANE))) return next(e)
     const list = await read($, acts)
     const t = await read($, turn)
     const lg = await read($, lang)

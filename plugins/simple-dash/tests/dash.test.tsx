@@ -65,6 +65,7 @@ const BAND = {
 }
 
 test('a one-line band above the prompt says what is going on', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'simple-dash', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
@@ -95,5 +96,17 @@ test('the log shows the newest action on top', async ($, on) => {
   const logLines = lines.filter(t => /✓/.test(t))
   expect(logLines[0]).toContain('second')
   expect(logLines[1]).toContain('first')
+  await ui.unmount()
+})
+
+test('the band is left to the mod whose pane is on screen', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'simple-dash', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>the engine's own</Text>
+  })
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect((await ui.findAll({ type: 'Svg' })).length).toBe(0)
+  expect(await ui.find({ type: 'Text', text: /the engine's own/ })).toBeDefined()
   await ui.unmount()
 })

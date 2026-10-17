@@ -92,3 +92,16 @@ export function Credit(E: Parts, $: EngineInterface, text: string, color: string
     </Box>
   )
 }
+
+/**
+ * Whether this mod's pane is the one on screen. Every mod may draw the band
+ * above the prompt, and the first one drawn would win; so only the mod whose
+ * pane is shown draws it, and the others pass.
+ */
+export async function isPaneShown($: EngineInterface, id: string): Promise<boolean> {
+  try {
+    return (await $.ui.panes()).some(p => p.id === id && p.isShown)
+  } catch {
+    return false
+  }
+}
