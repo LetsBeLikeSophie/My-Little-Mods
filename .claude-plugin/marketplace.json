@@ -1,0 +1,17 @@
+{
+  "name": "my-little-mods",
+  "description": "Little side-pane mods for Claude Code: a pixel RPG Adventure Log and a simple dashboard",
+  "owner": { "name": "Sophie", "url": "https://github.com/LetsBeLikeSophie" },
+  "plugins": [
+    {
+      "name": "pixel-activity",
+      "source": "./plugins/pixel-activity",
+      "description": "Adventure Log: a pixel-art RPG camp where your hero acts out what Claude is doing"
+    },
+    {
+      "name": "simple-dash",
+      "source": "./plugins/simple-dash",
+      "description": "A minimal dashboard: what Claude is doing, usage limits, results, time spent and a log"
+    }
+  ]
+}
