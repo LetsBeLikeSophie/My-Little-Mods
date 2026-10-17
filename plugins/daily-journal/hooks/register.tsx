@@ -403,15 +403,26 @@ export const register: Register = on => {
             </Box>
           )}
           {made.slice(0, 4).map((o, i) => (
-              <Box key={o.href} flexDirection="row" gap="sm" alignItems="center" padding="md" backgroundColor={PASTELS[i % PASTELS.length]} borderStyle="round" borderColor={PASTELS[i % PASTELS.length]}>
-                <Box flexDirection="column" flexGrow={1}>
-                  <Text weight="semibold" color={J.ink} wrap="truncate-end">
+              /* One thin pastel strip per result: title, when and kind on a single line. */
+              <Box
+                key={o.href}
+                flexDirection="row"
+                gap="sm"
+                alignItems="center"
+                paddingX="md"
+                paddingY="xs"
+                backgroundColor={PASTELS[i % PASTELS.length]}
+                borderStyle="round"
+                borderColor={PASTELS[i % PASTELS.length]}
+              >
+                <Box flexGrow={1} flexShrink={1}>
+                  <Text size="footnote" weight="semibold" color={J.ink} wrap="truncate-end">
                     {o.title}
                   </Text>
-                  <Text size="footnote" color={J.soft}>
-                    {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
-                  </Text>
                 </Box>
+                <Text size="footnote" color={J.soft}>
+                  {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
+                </Text>
                 <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
                   {L.open}
                 </Button>
