@@ -115,9 +115,9 @@ test('the thinking bubble says the step in progress', async () => {
 test('the theme button flips between dark and light', async ($, on) => {
   mock.store(on)
   const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
-  expect(await ui.find({ key: 'toggle-theme', text: /라이트|Light/ })).toBeDefined()
+  expect(await ui.find({ key: 'toggle-theme', text: /☀/ })).toBeDefined()
   await ui.press({ key: 'toggle-theme' })
-  expect(await ui.find({ key: 'toggle-theme', text: /다크|Dark/ })).toBeDefined()
+  expect(await ui.find({ key: 'toggle-theme', text: /☾/ })).toBeDefined()
   await ui.unmount()
 })
 

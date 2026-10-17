@@ -434,8 +434,10 @@ export const register: Register = on => {
           {L.totals} · {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
         </Text>
 
-        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap">
-          {AlertsButton(E, isAlerting, { on: L.alertsOn, off: L.alertsOff }, async () => {
+        {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}
+        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" paddingX="md" paddingY="xs" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
+          <Text color={J.sunDeep}>✿</Text>
+          {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
               const next = !isAlerting
               await update($, alerts, () => next)
               await $.store.set('alerts', next)

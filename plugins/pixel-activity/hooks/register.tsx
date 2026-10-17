@@ -614,17 +614,20 @@ export const register: Register = on => {
           {LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: FG, soft: DIM, error: RED }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) })}
         </Box>
 
-        <Box flexDirection="row" gap="sm" flexWrap="wrap">
-          {AlertsButton(E, isAlerting, { on: L.alertsOn, off: L.alertsOff }, async () => {
-              const next = !isAlerting
-              await update($, alerts, () => next)
-              await $.store.set('alerts', next)
-            })}
-          <Button key="toggle-legend" variant="secondary" onPress={toggle('legend')}>
-            {sh.legend ? L.legendClose : L.legendOpen}
+        {/* The camp menu: gold-lettered glyph buttons on one dark strip, the maker at its end. */}
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" paddingX="md" paddingY="xs" backgroundColor={CARD} borderStyle="round" borderColor={GOLD}>
+          <Text color={GOLD} weight="bold">
+            {L.menu}
+          </Text>
+          <Button key="toggle-picker" label={sh.picker ? L.pickerClose : L.pickerOpen} variant={sh.picker ? 'primary' : 'secondary'} onPress={toggle('picker')}>
+            {JOBS[jb].emoji}
+          </Button>
+          <Button key="toggle-legend" label={sh.legend ? L.legendClose : L.legendOpen} variant={sh.legend ? 'primary' : 'secondary'} onPress={toggle('legend')}>
+            📜
           </Button>
           <Button
             key="toggle-theme"
+            label={th === 'dark' ? L.light : L.dark}
             variant="secondary"
             onPress={async () => {
               const next = th === 'dark' ? 'light' : 'dark'
@@ -632,11 +635,14 @@ export const register: Register = on => {
               await $.store.set('theme', next)
             }}
           >
-            {th === 'dark' ? L.light : L.dark}
+            {th === 'dark' ? '☀' : '☾'}
           </Button>
-          <Button key="toggle-picker" variant="secondary" onPress={toggle('picker')}>
-            {sh.picker ? L.pickerClose : L.pickerOpen}
-          </Button>
+          {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
+            const next = !isAlerting
+            await update($, alerts, () => next)
+            await $.store.set('alerts', next)
+          })}
+          {Credit(E, $, L.madeBy, DIM)}
         </Box>
 
         {sh.legend && (
@@ -700,7 +706,6 @@ export const register: Register = on => {
             </Box>
           </Box>
         )}
-        {Credit(E, $, L.madeBy, DIM)}
       </Box>
     )
   })
