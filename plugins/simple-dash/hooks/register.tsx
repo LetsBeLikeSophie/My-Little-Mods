@@ -22,7 +22,7 @@ import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilTex
 import type { Lang } from './i18n'
 import { alert } from './alerts'
 import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
-import { bandSvg, ringsSvg, statusSvg, timeSvg } from './calm'
+import { bandSvg, headingSvg, ringsSvg, statusSvg, timeSvg } from './calm'
 import type { Palette } from './calm'
 
 const PANE = 'simple-dash'
@@ -370,9 +370,7 @@ export const register: Register = on => {
     const { Box, Text, Button, Svg } = E
     const card = (key: string, title: string, children: RenderChildren) => (
       <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={CARD}>
-        <Text weight="semibold" color={FG}>
-          {title}
-        </Text>
+        <Svg source={headingSvg(title, pal)} alt={title} />
         {children}
       </Box>
     )
@@ -457,8 +455,8 @@ export const register: Register = on => {
           </Text>,
         )}
 
-        {/* Quiet settings: the swatches as dots, then glyph buttons, then the maker. */}
-        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" paddingX="xs">
+        {/* Quiet settings on a card like the others: color buttons, glyph buttons, then the maker. */}
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={CARD}>
           {/* One button per color, the emoji drawn in that color: a tap picks it. */}
           {ACCENT_IDS.map(id => (
             <Button

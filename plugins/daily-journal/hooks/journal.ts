@@ -3,8 +3,7 @@
 
 import type { Status } from './core'
 
-const FONT = "'Segoe UI Variable Display','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif"
-const SERIF = "'Noto Serif KR','Nanum Myeongjo','Batang','Georgia',serif"
+const FONT = "'Noto Sans KR','Segoe UI Variable Display','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif"
 const W = 320
 // Cards span the full width, edge to edge like the app's own boxes, with this corner and inset.
 const R = 12
@@ -48,18 +47,13 @@ function clip(t: string, size: number, room: number): string {
   return `${out}…`
 }
 
-function text(x: number, y: number, size: number, weight: number, fill: string, t: string, anchor = 'start', family = FONT): string {
-  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${family}">${esc(t)}</text>`
+function text(x: number, y: number, size: number, weight: number, fill: string, t: string, anchor = 'start'): string {
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${FONT}">${esc(t)}</text>`
 }
 
-/** Serif lettering for the titles: the journal's handwritten-diary voice. */
-function serif(x: number, y: number, size: number, fill: string, t: string, anchor = 'start'): string {
-  return text(x, y, size, 600, fill, t, anchor, SERIF)
-}
-
-/** A card's title in serif, as a thin strip of its own. */
+/** A card's title, as a thin strip of its own. */
 export function headingSvg(title: string): string {
-  return svg(22, serif(0, 16, 15, J.ink, title))
+  return svg(22, text(0, 16, 15, 700, J.ink, title))
 }
 
 function svg(h: number, body: string): string {
@@ -71,7 +65,7 @@ export function greetingSvg(hello: string, date: string, initial: string): strin
   const H = 72
   return svg(
     H,
-    serif(0, 34, 24, J.ink, clip(hello, 24, W - 80)) +
+    text(0, 34, 24, 700, J.ink, clip(hello, 24, W - 80)) +
       text(0, 58, 13, 400, J.soft, date) +
       `<defs><linearGradient id="av" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB15C"/><stop offset="1" stop-color="${J.orange}"/></linearGradient></defs>` +
       `<circle cx="${W - 24}" cy="34" r="24" fill="url(#av)"/>` +
@@ -142,7 +136,7 @@ export function nowSvg(d: NowCard): string {
       // soft hills along the bottom
       `<path d="M0 ${H - 34} Q70 ${H - 58} 140 ${H - 38} T${W} ${H - 40} V${H - R} Q${W} ${H} ${W - R} ${H} H${R} Q0 ${H} 0 ${H - R} Z" fill="#F5B53A" opacity=".55"/>` +
       text(PAD, 34, 12.5, 600, '#7A5A12', d.label) +
-      serif(PAD, 66, 22, J.ink, clip(d.title, 22, room)) +
+      text(PAD, 66, 22, 700, J.ink, clip(d.title, 22, room)) +
       (d.detail ? text(PAD, 90, 12.5, 400, '#5E4A1E', clip(d.detail, 12.5, room)) : '') +
       (d.tag
         ? `<rect x="${PAD}" y="${H - 38}" width="${Math.max(54, widthOf(d.tag, 12) + 22)}" height="24" rx="12" fill="#FFFFFF"/>` +
@@ -166,7 +160,7 @@ export function chipsSvg(chips: readonly Chip[]): string {
     const [bg, ink] = tones[c.tone]
     body += `<rect x="${x}" y="0" width="${w}" height="${H}" rx="${R}" fill="${bg}"/>`
     body += text(x + 14, 26, 12.5, 600, J.ink, c.title)
-    body += serif(x + 14, 56, 26, J.ink, c.value)
+    body += text(x + 14, 56, 26, 700, J.ink, c.value)
     if (c.tag) {
       const tw = widthOf(c.tag, 11) + 16
       body += `<rect x="${x + 12}" y="${H - 34}" width="${tw}" height="20" rx="10" fill="#FFFFFF"/>` + text(x + 20, H - 20, 11, 700, ink, c.tag)
@@ -183,8 +177,8 @@ export type Pill = { label: string; pct: number }
 export function statsSvg(big: string, caption: string, title: string, pills: readonly Pill[], empty = ''): string {
   const H = 206
   let body = `<rect x="0" y="0" width="${W}" height="${H}" rx="${R}" fill="${J.card}"/>`
-  body += serif(PAD, 36, 15, J.ink, title)
-  body += serif(PAD, 104, 48, J.ink, big)
+  body += text(PAD, 36, 15, 700, J.ink, title)
+  body += text(PAD, 104, 48, 800, J.ink, big)
   body += text(PAD, 128, 12, 400, J.soft, caption)
   const n = Math.max(1, pills.length)
   const area = W - 150 - 20

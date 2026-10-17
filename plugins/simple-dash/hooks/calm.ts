@@ -5,7 +5,10 @@
 import type { Status } from './core'
 
 const FONT = "'Segoe UI Variable Display','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif"
+const SERIF = "'Noto Serif KR','Nanum Myeongjo','Batang','Georgia',serif"
 const W = 320
+// Cards span the full width, edge to edge like the app's own boxes, with this inset.
+const PAD = 16
 
 export type Palette = { card: string; ink: string; soft: string; track: string; accent: string; glow: string; rim: string }
 
@@ -35,8 +38,18 @@ function clip(t: string, size: number, room: number): string {
   return `${out}…`
 }
 
-function text(x: number, y: number, size: number, weight: number, fill: string, t: string, anchor = 'start'): string {
-  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${FONT}">${esc(t)}</text>`
+function text(x: number, y: number, size: number, weight: number, fill: string, t: string, anchor = 'start', family = FONT): string {
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${family}">${esc(t)}</text>`
+}
+
+/** Serif lettering for headlines, numbers and titles: the calm, bookish voice. */
+function serif(x: number, y: number, size: number, fill: string, t: string, anchor = 'start'): string {
+  return text(x, y, size, 400, fill, t, anchor, SERIF)
+}
+
+/** A card's title in serif, as a thin strip of its own. */
+export function headingSvg(title: string, p: Palette): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="44" viewBox="0 0 ${W} 22">${serif(0, 16, 15, p.ink, title)}</svg>`
 }
 
 /** Line icons on a 100×100 grid, stroked; the accent circle is drawn separately. */
@@ -82,21 +95,21 @@ export function statusSvg(d: StatusCard, p: Palette): string {
   const H = 112
   const s = 0.66
   const [cx, cy, r] = DOT[d.status]
-  const room = W - 112 - 24
+  const room = W - 100 - PAD
   const size = fitSize(d.headline, 24, room)
   // Waiting on the person: the card takes the accent's glow and an accent ring, and the label speaks up.
   const isAsking = d.status === 'approval'
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">` +
-    `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="9" fill="${isAsking ? p.glow : p.card}" stroke="${isAsking ? p.rim : p.card}" stroke-width="${isAsking ? 3 : 0}"` +
+    `<rect x="1.5" y="1.5" width="${W - 3}" height="${H - 3}" rx="9" fill="${isAsking ? p.glow : p.card}" stroke="${isAsking ? p.rim : p.card}" stroke-width="${isAsking ? 3 : 0}"` +
     `/>` +
-    `<g transform="translate(26 ${(H - 100 * s) / 2}) scale(${s})">` +
+    `<g transform="translate(${PAD} ${(H - 100 * s) / 2}) scale(${s})">` +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${p.accent}"/>` +
     `<path d="${ICONS[d.status]}" fill="none" stroke="${p.ink}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>` +
     `</g>` +
-    text(112, 38, 12, isAsking ? 700 : 400, isAsking ? p.ink : p.soft, clip(d.label, 12, room)) +
-    text(112, 42 + size, size, 300, p.ink, clip(d.headline, size, room)) +
-    (d.detail ? text(112, 86, 11.5, 400, p.soft, clip(d.detail, 11.5, room)) : '') +
+    text(100, 38, 12, isAsking ? 700 : 400, isAsking ? p.ink : p.soft, clip(d.label, 12, room)) +
+    serif(100, 42 + size, size, p.ink, clip(d.headline, size, room)) +
+    (d.detail ? text(100, 86, 11.5, 400, p.soft, clip(d.detail, 11.5, room)) : '') +
     `</svg>`
   )
 }
@@ -116,20 +129,20 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number): string 
 export function ringsSvg(rings: readonly Ring[], p: Palette): string {
   const H = 138
   const gap = 8
-  const w = (W - 8 - gap * (rings.length - 1)) / rings.length
+  const w = (W - gap * (rings.length - 1)) / rings.length
   let body = ''
   rings.forEach((g, i) => {
-    const x = 4 + i * (w + gap)
+    const x = i * (w + gap)
     const cx = x + w / 2
     const cy = 54
     const r = 28
     const now = g.pct === null ? 0 : Math.max(0, Math.min(1, g.pct / 100))
     const was = g.base === null || g.base === undefined ? now : Math.max(0, Math.min(now, g.base / 100))
-    body += `<rect x="${x}" y="4" width="${w}" height="${H - 8}" rx="9" fill="${p.card}"/>`
+    body += `<rect x="${x}" y="0" width="${w}" height="${H}" rx="9" fill="${p.card}"/>`
     body += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${p.track}" stroke-width="4"/>`
     if (was > 0) body += `<path d="${arc(cx, cy, r, 0, was)}" fill="none" stroke="${p.accent}" stroke-width="4" stroke-linecap="round"/>`
     if (now > was) body += `<path d="${arc(cx, cy, r, was, now)}" fill="none" stroke="${p.glow}" stroke-width="4" stroke-linecap="round"/>`
-    body += text(cx, cy + (g.gain ? 4 : 7), 20, 300, p.ink, g.pct === null ? '–' : `${Math.round(g.pct)}%`, 'middle')
+    body += serif(cx, cy + (g.gain ? 4 : 7), 20, p.ink, g.pct === null ? '–' : `${Math.round(g.pct)}%`, 'middle')
     if (g.gain) body += text(cx, cy + 18, 10.5, 600, p.accent, g.gain, 'middle')
     body += text(cx, 108, 12.5, 400, p.ink, g.label, 'middle')
     if (g.note) body += text(cx, 124, 10.5, 400, p.soft, clip(g.note, 10.5, w - 12), 'middle')
@@ -145,17 +158,17 @@ export function timeSvg(title: string, rows: readonly TimeRow[], p: Palette, emp
   const H = 52 + Math.max(1, rows.length) * rowH + 12
   const max = Math.max(1, ...rows.map(r => r.ms))
   const labelW = 64
-  const barMax = W - 32 - labelW - 92
-  let body = `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="9" fill="${p.card}"/>`
-  body += text(22, 36, 13, 600, p.ink, title)
-  if (rows.length === 0) body += text(22, 64, 12, 400, p.soft, empty)
+  const barMax = W - 2 * PAD - labelW - 92
+  let body = `<rect x="0" y="0" width="${W}" height="${H}" rx="9" fill="${p.card}"/>`
+  body += serif(PAD, 34, 15, p.ink, title)
+  if (rows.length === 0) body += text(PAD, 64, 12, 400, p.soft, empty)
   rows.forEach((r, i) => {
     const y = 52 + i * rowH
     const w = Math.max(6, (r.ms / max) * barMax)
-    body += text(22, y + 12, 12.5, 400, p.ink, r.label)
-    body += `<rect x="${22 + labelW}" y="${y + 4}" width="${barMax}" height="8" rx="4" fill="${p.track}"/>`
-    body += `<rect x="${22 + labelW}" y="${y + 4}" width="${w.toFixed(1)}" height="8" rx="4" fill="${i === 0 ? p.accent : p.glow}"/>`
-    body += text(W - 22, y + 12, 11, 400, p.soft, r.text, 'end')
+    body += text(PAD, y + 12, 12.5, 400, p.ink, r.label)
+    body += `<rect x="${PAD + labelW}" y="${y + 4}" width="${barMax}" height="8" rx="4" fill="${p.track}"/>`
+    body += `<rect x="${PAD + labelW}" y="${y + 4}" width="${w.toFixed(1)}" height="8" rx="4" fill="${i === 0 ? p.accent : p.glow}"/>`
+    body += text(W - PAD, y + 12, 11, 400, p.soft, r.text, 'end')
   })
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">${body}</svg>`
 }
