@@ -384,6 +384,15 @@ export const register: Register = on => {
 
   // One line above the prompt: what the hero is doing and the usage limits, so it
   // still shows with the pane closed. Plain text in the app's own colors.
+  // A small mark of this mod beside the footer's mode labels, while its pane is on screen.
+  on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
+    if (!(await isPaneShown($, PANE))) return next(e)
+    const jb = await read($, job)
+    const lv = levelOf(xpOf(await read($, life))).level
+    const label = `${JOBS[jb].emoji} Lv ${lv}`
+    return next({ ...e, props: { ...e.props, modes: [...e.props.modes, label] } })
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
     // Only the mod whose pane is on screen draws the band; the others pass it on.

@@ -91,3 +91,17 @@ test('the band is left to the mod whose pane is on screen', async ($, on) => {
   expect(await ui.find({ type: 'Text', text: /the engine's own/ })).toBeDefined()
   await ui.unmount()
 })
+
+test('a small mark joins the footer mode labels', async ($, on) => {
+  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  let modes: readonly string[] = []
+  on('ui.render', { component: 'SessionMode' }, ($, e) => {
+    modes = e.props.modes
+    const { Text } = $.ui.resolve(e)
+    return <Text>{modes.join(' & ')}</Text>
+  })
+  const ui = await $.ui.mount({ plugin: 'daily-journal', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
+  expect(modes[0]).toBe('auto')
+  expect(modes[1]).toMatch(/일지|journal/)
+  await ui.unmount()
+})

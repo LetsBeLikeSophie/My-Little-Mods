@@ -245,6 +245,15 @@ export const register: Register = on => {
 
   // One line above the prompt: the status and the usage limits, so it still shows
   // with the pane closed. Plain text in the app's own colors, a sunny dot in front.
+  // A small mark of this mod beside the footer's mode labels, while its pane is on screen.
+  on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
+    if (!(await isPaneShown($, PANE))) return next(e)
+    const who = await read($, name)
+    const lg = await read($, lang)
+    const label = who ? (lg === 'ko' ? `🌼 ${who}의 일지` : `🌼 ${who}'s journal`) : lg === 'ko' ? '🌼 오늘의 일지' : "🌼 Today's journal"
+    return next({ ...e, props: { ...e.props, modes: [...e.props.modes, label] } })
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
     // Only the mod whose pane is on screen draws the band; the others pass it on.
