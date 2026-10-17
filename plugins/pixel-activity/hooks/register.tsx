@@ -6,7 +6,7 @@ import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, 
 import { busyMs, statsSvg } from './stats'
 import { bandSvg, gainText, hudSvg } from './hud'
 import { DOC_EXT, artifactIn, baseName, detailOf, isCheckCommand, kindOf, nextPlan, pctOf, toolName } from './core'
-import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
@@ -220,7 +220,8 @@ export const register: Register = on => {
     void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
     ticker?.cancel()
     ticker = $.clock.every(1000, () => void update($, now, () => Date.now()))
-    void $.ui.open({ id: PANE, title: TITLE })
+    // Open by command; a new session reopens only the mod that was used last.
+    if (await wasLast($, PANE)) void $.ui.open({ id: PANE, title: TITLE })
 
     return next(e)
   })
@@ -234,6 +235,7 @@ export const register: Register = on => {
       if (isSpecies(w)) { await update($, species, () => w); await $.store.set('species', w); said.push(SPECIES_NAMES[lg][w]) }
     }
     await $.ui.open({ id: PANE, title: TITLE })
+    await rememberLast($, PANE)
 
     return { text: said.length > 0 ? UI[lg].changed(said.join(' ')) : UI[lg].opened }
   })

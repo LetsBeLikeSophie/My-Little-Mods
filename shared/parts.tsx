@@ -112,3 +112,27 @@ export async function isPaneShown($: EngineInterface, id: string): Promise<boole
 export async function alertIfShown($: EngineInterface, id: string, a: Alert): Promise<void> {
   if (await isPaneShown($, id)) await alert($, a)
 }
+
+// Which mod was opened last, shared by all of them in one small file, so a
+// new session opens that one pane alone instead of every installed mod's.
+async function lastFile($: EngineInterface): Promise<string | null> {
+  const home = (await $.env.get('USERPROFILE')) || (await $.env.get('HOME'))
+  return home ? `${home}/.claude/my-little-mods.json` : null
+}
+
+/** Notes that this mod's command just opened it. */
+export async function rememberLast($: EngineInterface, id: string): Promise<void> {
+  const path = await lastFile($)
+  if (path) await $.fs.write(path, JSON.stringify({ last: id })).catch(() => undefined)
+}
+
+/** Whether this mod was the last one opened by its command. */
+export async function wasLast($: EngineInterface, id: string): Promise<boolean> {
+  const path = await lastFile($)
+  if (!path) return false
+  try {
+    return (JSON.parse(await $.fs.read(path)) as { last?: string }).last === id
+  } catch {
+    return false
+  }
+}

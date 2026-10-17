@@ -18,7 +18,7 @@ import {
 } from './core'
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
-import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown } from './parts'
+import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
 import { J, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
@@ -101,7 +101,8 @@ export const register: Register = on => {
     void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
     ticker?.cancel()
     ticker = $.clock.every(1000, () => void update($, now, () => Date.now()))
-    void $.ui.open({ id: PANE, title: TITLE })
+    // Open by command; a new session reopens only the mod that was used last.
+    if (await wasLast($, PANE)) void $.ui.open({ id: PANE, title: TITLE })
 
     return next(e)
   })
@@ -115,6 +116,7 @@ export const register: Register = on => {
       await $.store.set('name', who)
     }
     await $.ui.open({ id: PANE, title: TITLE })
+    await rememberLast($, PANE)
 
     return { text: who ? UI[lg].named(who) : UI[lg].opened }
   })
