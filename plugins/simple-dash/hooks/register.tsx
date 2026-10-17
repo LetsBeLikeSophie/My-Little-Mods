@@ -20,6 +20,7 @@ import {
 } from './core'
 import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
+import { alert } from './alerts'
 
 const PANE = 'simple-dash'
 const TITLE = 'Dashboard'
@@ -39,6 +40,13 @@ const theme = atom({ plugin: 'simple-dash', key: 'theme' } as const, 'dark')
 const lang = atom({ plugin: 'simple-dash', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
 const logOpen = atom({ plugin: 'simple-dash', key: 'logOpen' } as const, '')
 const now = atom({ plugin: 'simple-dash', key: 'now' } as const, 0)
+const approval = atom({ plugin: 'simple-dash', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'simple-dash', key: 'alerts' } as const, true)
+const life = atom({ plugin: 'simple-dash', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
+
+type Life = { quests: number; slain: number; actions: number }
+const LONG_TURN_MS = 30_000
+const APPROVAL_ALERT_MS = 4_000
 
 export const ACCENTS: { [K in Accent]: string } = {
   blue: '#3B82F6',
@@ -103,6 +111,11 @@ export const register: Register = on => {
     if (isAccent(savedAccent)) await update($, accent, () => savedAccent)
     const savedTheme = await $.store.get('theme')
     if (savedTheme === 'dark' || savedTheme === 'light') await update($, theme, () => savedTheme)
+    const savedAlerts = await $.store.get('alerts')
+    if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
+    const savedLife = (await $.store.get('life')) as Life | undefined
+    if (savedLife && typeof savedLife.quests === 'number') await update($, life, () => savedLife)
+    await update($, approval, () => null)
     void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
     ticker?.cancel()
     ticker = $.clock.every(1000, () => void update($, now, () => Date.now()))
@@ -153,6 +166,13 @@ export const register: Register = on => {
       await update($, spent, (m: { [k: string]: number }) => ({ ...m, thinking: (m.thinking ?? 0) + think }))
       await update($, turn, (x: Turn) => ({ ...x, isWorking: false, endedAt: end }))
       void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
+      await update($, approval, () => null)
+      const l = await update($, life, (x: Life) => ({ ...x, quests: x.quests + 1 }))
+      await $.store.set('life', l)
+      if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
+        const lg = await read($, lang)
+        void alert($, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
+      }
     }
 
     return done
@@ -180,6 +200,11 @@ export const register: Register = on => {
 
     const ran = await next(e)
     const isError = ran.deny !== undefined || ran.isError === true
+    if ((await read($, approval))?.id === act.id) await update($, approval, () => null)
+    if (e.agentId === undefined) {
+      const l = await update($, life, (x: Life) => ({ ...x, actions: x.actions + 1, slain: x.slain + (act.isCheck && !isError ? 1 : 0) }))
+      await $.store.set('life', l)
+    }
     if (e.agentId === undefined) {
       const key = act.isCheck ? 'check' : act.kind
       const took = Date.now() - act.startedAt
@@ -204,6 +229,25 @@ export const register: Register = on => {
     return ran
   }).catch(($, e, next) => next(e)) // bookkeeping never blocks a tool
 
+  // The engine is about to ask the person whether a call may run: say so, and
+  // if they haven't answered after a few seconds, get their attention.
+  on('tool.check', async ($, e, next) => {
+    const verdict = await next(e)
+    if (verdict.decision === 'ask' && e.agentId === undefined) {
+      const id = e.tool_use_id ?? `${e.tool}-${Date.now()}`
+      await update($, approval, () => ({ id, tool: e.tool, since: Date.now() }))
+      $.clock.after(APPROVAL_ALERT_MS, () => {
+        void (async () => {
+          const still = await read($, approval)
+          if (still?.id !== id) return
+          const lg = await read($, lang)
+          await alert($, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+        })()
+      })
+    }
+    return verdict
+  }).catch(($, e, next) => next(e))
+
   on('session.measure', async ($, e, next) => {
     await update($, quota, () => quotaFrom(e))
     return next(e)
@@ -225,7 +269,7 @@ export const register: Register = on => {
     const qt = await read($, quota)
     const base = await read($, limitBase)
     const at = Math.max(await read($, now), Date.now())
-    const status = statusOf(t, list, at)
+    const status = statusOf(t, list, at, (await read($, approval)) !== null)
     const live = [...list].reverse().find(a => a.endedAt === null)
     const five = pctOf(qt, 'five_hour')
     const week = pctOf(qt, 'seven_day')
@@ -269,6 +313,8 @@ export const register: Register = on => {
     const th = await read($, theme)
     const lg = await read($, lang)
     const opened = await read($, logOpen)
+    const lifeNow = await read($, life)
+    const isAlerting = await read($, alerts)
     const tick = await read($, now)
     const L = UI[lg]
     const { BG, CARD, FG, DIM, EMPTY, RED } = THEMES[th]
@@ -276,7 +322,7 @@ export const register: Register = on => {
     const GLOW = ac === 'mono' ? DIM : lighten(ACCENTS[ac], 0.45)
 
     const at = Math.max(tick, Date.now())
-    const status = statusOf(t, list, at)
+    const status = statusOf(t, list, at, (await read($, approval)) !== null)
     const live = [...list].reverse().find(a => a.endedAt === null)
     const step = pl.current >= 0 ? (pl.items[pl.current] ?? '') : ''
     const thinkingWord = spinner && at - spinner.at < 10_000 && spinner.word !== 'Working' ? spinner.word : ''
@@ -482,6 +528,14 @@ export const register: Register = on => {
           ),
         )}
 
+        {card(
+          'totals',
+          L.totals,
+          <Text mono size="footnote" color={FG}>
+            {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
+          </Text>,
+        )}
+
         <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center">
           {ACCENT_IDS.map(id => (
             <Box key={`accent-row-${id}`} flexDirection="row" gap="xs" alignItems="center">
@@ -498,6 +552,17 @@ export const register: Register = on => {
               </Button>
             </Box>
           ))}
+          <Button
+            key="toggle-alerts"
+            variant="secondary"
+            onPress={async () => {
+              const next = !isAlerting
+              await update($, alerts, () => next)
+              await $.store.set('alerts', next)
+            }}
+          >
+            {isAlerting ? L.alertsOn : L.alertsOff}
+          </Button>
           <Button
             key="toggle-theme"
             variant="secondary"

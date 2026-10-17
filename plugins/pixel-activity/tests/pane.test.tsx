@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { artifactIn, detailOf, isBattleCommand, kindOf, lineFor, nextPlan, sceneFor, schedule, toolName } from '../hooks/register'
+import { artifactIn, detailOf, isBattleCommand, kindOf, levelOf, lineFor, nextPlan, sceneFor, schedule, toolName, xpOf } from '../hooks/register'
 import { busyMs, statsSvg } from '../hooks/stats'
 import { gainText, hudSvg } from '../hooks/hud'
 import { JOB_IDS, SCENE_IDS, SPECIES_IDS, campSvg, thumbSvg } from '../hooks/camp'
@@ -238,5 +238,34 @@ test('a one-line band above the prompt says what is going on', async ($, on) => 
     props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
   })
   expect((await ui.findAll({ type: 'Text' })).length).toBeGreaterThan(0)
+  await ui.unmount()
+})
+
+test('a pending approval raises a hand at once', async () => {
+  const idle = { isWorking: true, startedAt: 1, endedAt: null, ids: [] }
+  expect(sceneFor(idle, [], 2, true)).toBe('approval')
+  const say = (x: string) => x
+  const reading = schedule(undefined, 'read', 0, say)
+  expect(schedule(reading, 'approval', 100, say).scene).toBe('approval')
+})
+
+test('XP adds up to levels that each ask a little more', async () => {
+  expect(xpOf({ quests: 3, slain: 2, actions: 7 })).toBe(47)
+  expect(levelOf(0)).toEqual({ level: 1, into: 0, need: 50 })
+  expect(levelOf(50)).toEqual({ level: 2, into: 0, need: 75 })
+  expect(levelOf(130)).toEqual({ level: 3, into: 5, need: 100 })
+})
+
+test('an ask from the engine shows as waiting for approval', async ($, on) => {
+  on('tool.check', () => ({ decision: 'ask' }))
+  const v = await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' }, tool_use_id: 't1' })
+  expect(v.decision).toBe('ask')
+  const ui = await $.ui.mount({
+    plugin: 'pixel-activity',
+    surface: 'desktop',
+    component: 'AbovePrompt',
+    props: { hasSurvey: false, isWorking: true, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
+  })
+  expect(await ui.find({ type: 'Text', text: /승인 기다리는 중|Waiting for your approval/ })).toBeDefined()
   await ui.unmount()
 })

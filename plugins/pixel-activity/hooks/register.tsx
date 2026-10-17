@@ -5,6 +5,7 @@ import type { Act, ActKind, Job, Output, Species, Turn } from '../types'
 import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, walkSeconds } from './camp'
 import { busyMs, statsSvg } from './stats'
 import { gainText, hudSvg } from './hud'
+import { alert } from './alerts'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
@@ -29,6 +30,9 @@ const job = atom({ plugin: 'pixel-activity', key: 'job' } as const, 'warrior')
 const show = atom({ plugin: 'pixel-activity', key: 'show' } as const, { legend: false, picker: false })
 const plan = atom({ plugin: 'pixel-activity', key: 'plan' } as const, { items: [], current: -1 })
 const theme = atom({ plugin: 'pixel-activity', key: 'theme' } as const, 'dark')
+const approval = atom({ plugin: 'pixel-activity', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'pixel-activity', key: 'alerts' } as const, true)
+const life = atom({ plugin: 'pixel-activity', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
 const lang = atom({ plugin: 'pixel-activity', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
 const spent = atom({ plugin: 'pixel-activity', key: 'spent' } as const, {})
 const logOpen = atom({ plugin: 'pixel-activity', key: 'logOpen' } as const, '')
@@ -132,7 +136,32 @@ export function nextPlan(prev: Plan, tool: string, args: { [k: string]: unknown 
 }
 
 /** Which picture to draw, from the turn and the calls in it. */
-export function sceneFor(t: Turn, list: readonly Act[], at: number): Scene {
+type Life = { quests: number; slain: number; actions: number }
+
+const LONG_TURN_MS = 30_000
+const APPROVAL_ALERT_MS = 4_000
+
+/** XP from everything done so far: a finished request 10, a slain bug 5, any action 1. */
+export function xpOf(l: Life): number {
+  return l.quests * 10 + l.slain * 5 + l.actions
+}
+
+/** The level an amount of XP reaches; each level asks 25 more than the one before (50, 75, 100 …). */
+export function levelOf(xp: number): { level: number; into: number; need: number } {
+  let level = 1
+  let need = 50
+  let left = xp
+  while (left >= need) {
+    left -= need
+    level += 1
+    need += 25
+  }
+  return { level, into: left, need }
+}
+
+/** Which picture to draw, from the turn and the calls in it; a pending approval comes first. */
+export function sceneFor(t: Turn, list: readonly Act[], at: number, isAsking = false): Scene {
+  if (isAsking) return 'approval'
   const live = [...list].reverse().find(a => a.endedAt === null)
   if (t.isWorking) {
     if (live) return live.isBattle ? 'battle' : live.kind
@@ -153,7 +182,7 @@ const LOG_LINES = 6
 
 /** The legend, in three groups: work, tests, downtime. */
 const LEGEND_GROUPS: readonly (readonly ['groupWork' | 'groupFight' | 'groupRest', readonly Scene[]])[] = [
-  ['groupWork', ['thinking', 'read', 'search', 'edit', 'write', 'bash', 'web', 'agent', 'other']],
+  ['groupWork', ['thinking', 'read', 'search', 'edit', 'write', 'bash', 'web', 'agent', 'other', 'approval']],
   ['groupFight', ['battle', 'slain', 'error']],
   ['groupRest', ['done', 'waiting', 'sleeping']],
 ]
@@ -231,6 +260,8 @@ const SAY_EVERY_MS = 8_000
 /** The scene to show at `at`, given the one wanted now and the one on screen. */
 export function schedule(cur: Shown | undefined, want: Scene, at: number, say: (s: Scene) => string): Shown {
   if (!cur) return { scene: want, since: at, say: say(want), sayAt: at }
+  // Asking for approval doesn't wait its turn: the hand goes up at once.
+  if (want === 'approval' && cur.scene !== 'approval') return { scene: want, from: cur.scene, since: at, say: say(want), sayAt: at }
   const arrived = cur.since + (cur.from ? walkSeconds(cur.from, cur.scene) * 1000 : 0)
   if (want !== cur.scene && at - arrived >= STAY_MS) return { scene: want, from: cur.scene, since: at, say: say(want), sayAt: at }
   // While thinking, the bubble may change now and then, once the hero has arrived.
@@ -253,6 +284,11 @@ export const register: Register = on => {
     if (isJob(savedJob)) await update($, job, () => savedJob)
     const savedTheme = await $.store.get('theme')
     if (savedTheme === 'dark' || savedTheme === 'light') await update($, theme, () => savedTheme)
+    const savedAlerts = await $.store.get('alerts')
+    if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
+    const savedLife = (await $.store.get('life')) as Life | undefined
+    if (savedLife && typeof savedLife.quests === 'number') await update($, life, () => savedLife)
+    await update($, approval, () => null)
     void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
     ticker?.cancel()
     ticker = $.clock.every(1000, () => void update($, now, () => Date.now()))
@@ -305,6 +341,18 @@ export const register: Register = on => {
       await update($, spent, (m: { [k: string]: number }) => ({ ...m, thinking: (m.thinking ?? 0) + think }))
       await update($, turn, (x: Turn) => ({ ...x, isWorking: false, endedAt: end }))
       void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
+      await update($, approval, () => null)
+      const before = levelOf(xpOf(await read($, life))).level
+      const l = await update($, life, (x: Life) => ({ ...x, quests: x.quests + 1 }))
+      await $.store.set('life', l)
+      const after = levelOf(xpOf(l)).level
+      const lg = await read($, lang)
+      const isNative = await read($, alerts)
+      if (after > before) {
+        void alert($, { title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
+      } else if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
+        void alert($, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
+      }
     }
 
     return done
@@ -339,6 +387,11 @@ export const register: Register = on => {
 
     const ran = await next(e)
     const isError = ran.deny !== undefined || ran.isError === true
+    if ((await read($, approval))?.id === act.id) await update($, approval, () => null)
+    if (e.agentId === undefined) {
+      const l = await update($, life, (x: Life) => ({ ...x, actions: x.actions + 1, slain: x.slain + (act.isBattle && !isError ? 1 : 0) }))
+      await $.store.set('life', l)
+    }
     if (e.agentId === undefined) {
       const key = act.isBattle ? 'battle' : act.kind
       const took = Date.now() - act.startedAt
@@ -369,6 +422,25 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e)) // bookkeeping never blocks a tool
 
   // Usage limits, context and cost, pushed by the engine whenever one moves.
+  // The engine is about to ask the person whether a call may run: raise a hand,
+  // and if they haven't answered after a few seconds, get their attention.
+  on('tool.check', async ($, e, next) => {
+    const verdict = await next(e)
+    if (verdict.decision === 'ask' && e.agentId === undefined) {
+      const id = e.tool_use_id ?? `${e.tool}-${Date.now()}`
+      await update($, approval, () => ({ id, tool: e.tool, since: Date.now() }))
+      $.clock.after(APPROVAL_ALERT_MS, () => {
+        void (async () => {
+          const still = await read($, approval)
+          if (still?.id !== id) return
+          const lg = await read($, lang)
+          await alert($, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+        })()
+      })
+    }
+    return verdict
+  }).catch(($, e, next) => next(e))
+
   on('session.measure', async ($, e, next) => {
     await update($, quota, () => quotaFrom(e))
     return next(e)
@@ -391,7 +463,7 @@ export const register: Register = on => {
     const qt = await read($, quota)
     const base = await read($, limitBase)
     const at = Math.max(await read($, now), Date.now())
-    const want = sceneFor(t, list, at)
+    const want = sceneFor(t, list, at, (await read($, approval)) !== null)
     const live = [...list].reverse().find(a => a.endedAt === null)
     const five = qt.limits.find(l => l.kind === 'five_hour')?.percentUsed ?? null
     const week = qt.limits.find(l => l.kind === 'seven_day')?.percentUsed ?? null
@@ -432,12 +504,14 @@ export const register: Register = on => {
     const L = UI[lg]
     const used = await read($, spent)
     const opened = await read($, logOpen)
+    const lifeNow = await read($, life)
+    const isAlerting = await read($, alerts)
     const base = await read($, limitBase)
     const qt = await read($, quota)
 
     const at = Math.max(tick, Date.now())
     const hour = new Date(at).getHours() + new Date(at).getMinutes() / 60
-    const want = sceneFor(t, list, at)
+    const want = sceneFor(t, list, at, (await read($, approval)) !== null)
     shown = schedule(shown, want, at, s => lineFor(lg, s, jb, at, step, spinner))
     const scene = shown.scene
     const walking = shown.from && at < shown.since + walkSeconds(shown.from, scene) * 1000 ? shown.from : undefined
@@ -507,9 +581,17 @@ export const register: Register = on => {
           )}
           alt={SCENES[lg][want].what}
         />
-        <Text tabular color={DIM}>
-          {timing}
-        </Text>
+        <Box flexDirection="row" gap="sm" flexWrap="wrap">
+          <Text tabular color={DIM}>
+            {timing}
+          </Text>
+          <Text tabular color={GOLD}>
+            {(() => {
+              const lv = levelOf(xpOf(lifeNow))
+              return L.level(lv.level, lv.into, lv.need)
+            })()}
+          </Text>
+        </Box>
         <Svg
           source={hudSvg(
             [
@@ -612,6 +694,17 @@ export const register: Register = on => {
         </Box>
 
         <Box flexDirection="row" gap="sm" flexWrap="wrap">
+          <Button
+            key="toggle-alerts"
+            variant="secondary"
+            onPress={async () => {
+              const next = !isAlerting
+              await update($, alerts, () => next)
+              await $.store.set('alerts', next)
+            }}
+          >
+            {isAlerting ? L.alertsOn : L.alertsOff}
+          </Button>
           <Button key="toggle-legend" variant="secondary" onPress={toggle('legend')}>
             {sh.legend ? L.legendClose : L.legendOpen}
           </Button>

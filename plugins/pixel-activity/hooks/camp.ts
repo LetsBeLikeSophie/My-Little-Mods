@@ -20,6 +20,7 @@ export type Scene =
   | 'sleeping'
   | 'battle'
   | 'slain'
+  | 'approval'
 
 export type Sky = 'day' | 'dusk' | 'night'
 
@@ -675,6 +676,16 @@ function scene(kind: Scene, k: Ctx): { layers: string; fire: boolean } {
       })
       return { layers: cycle(fs, 0.3), fire: true }
     }
+    case 'approval': {
+      // Waiting on the person: a hand up high and a blinking "!".
+      const fs = frames(2, (p, f) => {
+        const x = 104
+        const fy = 86
+        fig(p, { x, fy, l: [x - 8, fy - 8], r: [x + 6, fy - 34 - f] })
+        if (f === 0) { p.R(x + 12, fy - 48, 2, 6, '#E03131'); p.R(x + 12, fy - 40, 2, 2, '#E03131') }
+      })
+      return { layers: cycle(fs, 0.35), fire: true }
+    }
     case 'sleeping': {
       const fs = frames(3, (p, f) => {
         const x = LOG.x + 8
@@ -970,7 +981,7 @@ function classVictory(k: Ctx, f: number, p: Pen, x: number, fy: number): void {
 /** Where each scene's hero stands, so the speech bubble sits over their head. */
 const SPEAKER: { [K in Scene]: number } = {
   thinking: 110, read: 66, search: 104, edit: 100, write: 134, bash: 100, web: 104, agent: 110,
-  other: 98, error: 104, done: 146, waiting: 66, sleeping: 66, battle: 98, slain: 100,
+  other: 98, error: 104, done: 146, waiting: 66, sleeping: 66, battle: 98, slain: 100, approval: 104,
 }
 
 // The view: a camera on the part of the camp where the hero is working, so the
@@ -1142,5 +1153,5 @@ export function portraitSvg(sp: Species, job: Job): string {
 /** Every scene, in the order the legend lists them. */
 export const SCENE_IDS: readonly Scene[] = [
   'thinking', 'read', 'search', 'edit', 'write', 'bash', 'web', 'agent', 'other',
-  'battle', 'slain', 'error', 'done', 'waiting', 'sleeping',
+  'battle', 'slain', 'error', 'approval', 'done', 'waiting', 'sleeping',
 ]

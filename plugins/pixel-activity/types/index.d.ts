@@ -58,6 +58,9 @@ declare module 'claude-code' {
       lang: 'ko' | 'en'
       spent: { [kind: string]: number }
       logOpen: string
+      approval: { id: string; tool: string; since: number } | null
+      alerts: boolean
+      life: { quests: number; slain: number; actions: number }
       limitBase: { five: number | null; week: number | null }
       quota: {
         limits: { kind: string; percentUsed: number; resetsAt: string | null }[]

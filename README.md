@@ -40,12 +40,15 @@ In the Claude desktop app, where `/plugin` does not run: click **+** next to the
 - **Usage-limit HUD:** the 5-hour and weekly limits as XP bars; what the last request used glows.
 - **Results, time spent and a log:** links to documents and artifacts, a thinking-vs-work chart, one-line log entries.
 - The sky follows the real time of day. Light and dark themes; Korean or English by system language.
+- **Alerts:** when Claude waits for your approval the hero raises a hand, and after a few seconds a Windows notification and a sound follow; a request that ran 30s or more pings when done. Toggle with the 🔔 button.
+- **Level & XP:** finished requests, slain bugs and actions add up across sessions.
 - Open with `/pixel` · change hero with `/pixel mage cat`
 
 ## simple-dash
 
 - What Claude is doing, usage limits (bright part = what the last request used), results, time spent and a log, as text and bars.
 - Accent colors: blue, green, purple, orange, mono. Light and dark.
+- Alerts for approvals and long requests (toggle), and all-time totals.
 - Open with `/dash` · change color with `/dash green`
 
 ## Good to know

@@ -3,7 +3,7 @@
 
 import type { Act, ActKind, Quota, Turn } from '../types'
 
-export type Status = ActKind | 'check' | 'thinking' | 'error' | 'done' | 'waiting'
+export type Status = ActKind | 'check' | 'thinking' | 'error' | 'done' | 'waiting' | 'approval'
 
 const DONE_MS = 8_000
 
@@ -77,7 +77,8 @@ export function nextPlan(prev: Plan, tool: string, args: { [k: string]: unknown 
 }
 
 /** What to say Claude is doing right now. */
-export function statusOf(t: Turn, list: readonly Act[], at: number): Status {
+export function statusOf(t: Turn, list: readonly Act[], at: number, isAsking = false): Status {
+  if (isAsking) return 'approval'
   const live = [...list].reverse().find(a => a.endedAt === null)
   if (t.isWorking) {
     if (live) return live.isCheck ? 'check' : live.kind

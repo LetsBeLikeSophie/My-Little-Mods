@@ -70,3 +70,8 @@ test('a one-line band above the prompt says what is going on', async ($, on) => 
   expect((await ui.findAll({ type: 'Text' })).length).toBeGreaterThan(0)
   await ui.unmount()
 })
+
+test('a pending approval is the status', async () => {
+  const idle = { isWorking: true, startedAt: 1, endedAt: null, ids: [] }
+  expect(statusOf(idle, [], 2, true)).toBe('approval')
+})
