@@ -130,12 +130,13 @@ export function barCells(pct: number | null, base: number | null | undefined, wi
   return { old: from, gained: lit - from, empty: width - lit }
 }
 
-/** Mixes a hex color toward white by `t` (0..1), for the gained part of a bar. */
+/** Mixes a hex color toward white by `t` (0..1), or toward black by a negative `t`. */
 export function lighten(hex: string, t: number): string {
   const n = parseInt(hex.slice(1), 16)
+  // t > 0 mixes toward white, t < 0 toward black.
   const ch = (shift: number) => {
     const v = (n >> shift) & 255
-    return Math.round(v + (255 - v) * t)
+    return Math.round(t >= 0 ? v + (255 - v) * t : v * (1 + t))
   }
   return `#${[16, 8, 0].map(s => ch(s).toString(16).padStart(2, '0')).join('')}`
 }

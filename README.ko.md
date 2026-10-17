@@ -2,14 +2,15 @@
 
 [English](README.md) · **한국어**
 
-Claude Code 사이드 패널에 뜨는 작은 모드(mod) 두 개예요. Claude가 지금 무엇을 하는지, 사용 한도가 얼마나 남았는지, 무엇을 만들었는지 한눈에 보여 줘요. [My Little Sessions](https://github.com/LetsBeLikeSophie/My-Little-Sessions)와 같은 제작자가 만들었어요.
+Claude Code 사이드 패널에 뜨는 작은 모드(mod) 세 개예요. 셋 다 같은 정보(지금 하는 일, 사용 한도, 시간 쓴 곳, 결과물, 로그)를 각자 다른 분위기로 보여 줘요. Claude가 지금 무엇을 하는지, 사용 한도가 얼마나 남았는지, 무엇을 만들었는지 한눈에 보여 줘요. [My Little Sessions](https://github.com/LetsBeLikeSophie/My-Little-Sessions)와 같은 제작자가 만들었어요.
 
 | 모드 | 어떤 모습 |
 | --- | --- |
 | **pixel-activity** (Adventure Log) | 픽셀아트 RPG 야영지. 고른 캐릭터가 Claude가 쓰는 도구에 맞춰 행동해요 |
-| **simple-dash** | 그림 없이 정보만 보여 주는 대시보드. 포인트 색만 골라요 |
+| **simple-dash** | 차분한 느낌: 은은한 바탕에 하얀 카드, 얇은 링과 가는 글씨. 포인트 색을 골라요 |
+| **daily-journal** | 따뜻한 느낌: 크림 바탕, 표정이 바뀌는 해 카드, 파스텔 칩과 알약 그래프 |
 
-둘 중 마음에 드는 것 하나만 설치해도 되고, 둘 다 설치해도 돼요.
+마음에 드는 것 하나만 설치해도 되고, 여러 개 설치해도 돼요.
 
 ## 설치
 
@@ -21,6 +22,10 @@ Claude Code 사이드 패널에 뜨는 작은 모드(mod) 두 개예요. Claude�
 
 ```
 /plugin install simple-dash --marketplace LetsBeLikeSophie/My-Little-Mods
+```
+
+```
+/plugin install daily-journal --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 처음이면 `Add marketplace?`가 나와요. `y`를 누르고 범위(user)를 고르면 끝이에요.
@@ -46,10 +51,15 @@ Claude 데스크톱 앱에서는 `/plugin`이 안 돼요. 입력창 옆 **+ → 
 
 ## simple-dash
 
-- 지금 하는 일, 사용 한도(밝은 부분 = 방금 요청이 쓴 양), 결과물, 시간 쓴 곳, 로그를 텍스트와 막대로 보여 줘요.
+- 얇은 선 아이콘의 상태 카드, 얇은 링 세 개로 보는 사용 한도(밝게 빛나는 부분 = 방금 요청이 쓴 양), 시간 쓴 곳, 결과물, 로그.
 - 포인트 색: 파랑, 초록, 보라, 주황, 흑백. 라이트·다크 전환.
 - 승인 대기·긴 작업 완료 알림(켜고 끄기), 누적 기록.
 - 열기: `/dash` · 색 바꾸기: `/dash green`
+
+## daily-journal
+
+- 이름을 부르는 인사, 상태에 따라 표정이 바뀌는 해 카드, 파스텔 칩으로 보는 한도, 큰 숫자와 알약 막대(시간 쓴 곳), 파스텔 결과물 카드, 로그.
+- 열기: `/journal` · 이름 정하기: `/journal name 소피` (안 정하면 git 이름)
 
 ## 알아 둘 것
 

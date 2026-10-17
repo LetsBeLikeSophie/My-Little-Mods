@@ -21,6 +21,8 @@ import {
 import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { alert } from './alerts'
+import { ringsSvg, statusSvg, timeSvg } from './calm'
+import type { Palette } from './calm'
 
 const PANE = 'simple-dash'
 const TITLE = 'Dashboard'
@@ -48,18 +50,19 @@ type Life = { quests: number; slain: number; actions: number }
 const LONG_TURN_MS = 30_000
 const APPROVAL_ALERT_MS = 4_000
 
+// Soft, airy accents: one per dashboard, on its circle, rings and bars.
 export const ACCENTS: { [K in Accent]: string } = {
-  blue: '#3B82F6',
-  green: '#10B981',
-  purple: '#8B5CF6',
-  orange: '#F59E0B',
-  mono: '#9CA3AF',
+  blue: '#8FA2F2',
+  green: '#78C2A0',
+  purple: '#B39BF3',
+  orange: '#F2AE72',
+  mono: '#A3A8B4',
 }
 const ACCENT_IDS = Object.keys(ACCENTS) as Accent[]
 
 const THEMES = {
-  dark: { BG: '#16181D', CARD: '#1F2229', FG: '#E8EAED', DIM: '#8B9099', EMPTY: '#2E323A', RED: '#F87171' },
-  light: { BG: '#F6F7F9', CARD: '#FFFFFF', FG: '#1F2328', DIM: '#6B7280', EMPTY: '#E5E7EB', RED: '#DC2626' },
+  dark: { BG: '#141620', CARD: '#1F2330', FG: '#E8EAF0', DIM: '#8E95A6', EMPTY: '#2C3142', RED: '#F28B8B' },
+  light: { BG: '#EEF0F8', CARD: '#FFFFFF', FG: '#2B2D33', DIM: '#8A8F9C', EMPTY: '#EEF0F7', RED: '#D9534F' },
 } as const
 
 function isAccent(v: unknown): v is Accent {
@@ -318,8 +321,17 @@ export const register: Register = on => {
     const tick = await read($, now)
     const L = UI[lg]
     const { BG, CARD, FG, DIM, EMPTY, RED } = THEMES[th]
-    const A = ac === 'mono' ? FG : ACCENTS[ac]
-    const GLOW = ac === 'mono' ? DIM : lighten(ACCENTS[ac], 0.45)
+    const A = ACCENTS[ac]
+    const pal: Palette = {
+      card: CARD,
+      ink: FG,
+      soft: DIM,
+      track: EMPTY,
+      accent: A,
+      glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55),
+    }
+    // The pane's own background: a whisper of the accent on light, deep slate on dark.
+    const TINT = th === 'dark' ? BG : lighten(A, 0.82)
 
     const at = Math.max(tick, Date.now())
     const status = statusOf(t, list, at, (await read($, approval)) !== null)
@@ -352,101 +364,49 @@ export const register: Register = on => {
       )
     }
 
-    const { Box, Text, Button } = $.ui.resolve(e)
-    const card = (key: string, title: string, children: RenderChildren, note?: string) => (
+    const { Box, Text, Button, Svg } = $.ui.resolve(e)
+    const card = (key: string, title: string, children: RenderChildren) => (
       <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
-        <Box flexDirection="row" gap={1}>
-          <Text size="footnote" weight="semibold" color={DIM}>
-            {title}
-          </Text>
-          {note && (
-            <Text size="footnote" color={DIM}>
-              · {note}
-            </Text>
-          )}
-        </Box>
+        <Text weight="semibold" color={FG}>
+          {title}
+        </Text>
         {children}
       </Box>
     )
-    const bar = (key: string, label: string, pct: number | null, b: number | null | undefined, right: string) => {
-      const c = barCells(pct, b, BAR)
-      const gain = gainText(pct, b)
-      return (
-        <Box key={key} flexDirection="row" gap={1}>
-          <Text mono color={FG}>
-            {label.padEnd(lg === 'ko' ? 3 : 7)}
-          </Text>
-          <Box flexDirection="row">
-            <Text mono color={A}>
-              {'━'.repeat(c.old)}
-            </Text>
-            <Text mono color={GLOW}>
-              {'━'.repeat(c.gained)}
-            </Text>
-            <Text mono color={EMPTY}>
-              {'━'.repeat(c.empty)}
-            </Text>
-          </Box>
-          <Text mono tabular color={FG}>
-            {pct === null ? ' –' : `${String(Math.round(pct)).padStart(3)}%`}
-          </Text>
-          {gain && (
-            <Text mono color={GLOW}>
-              {gain}
-            </Text>
-          )}
-          {right && (
-            <Text size="footnote" color={DIM}>
-              {right}
-            </Text>
-          )}
-        </Box>
-      )
-    }
-    const limitRow = (kind: 'five_hour' | 'seven_day') => {
+    const ring = (kind: 'five_hour' | 'seven_day') => {
       const q = qt.limits.find(l => l.kind === kind)
       const reset = q?.resetsAt ? Date.parse(q.resetsAt) - at : NaN
-      return bar(
-        kind,
-        kind === 'five_hour' ? L.five : L.week,
-        q ? q.percentUsed : null,
-        kind === 'five_hour' ? base.five : base.week,
-        Number.isFinite(reset) ? `↻ ${untilText(lg, reset)}` : '',
-      )
+      const pct = q ? q.percentUsed : null
+      const b = kind === 'five_hour' ? base.five : base.week
+      return {
+        label: kind === 'five_hour' ? L.five : L.week,
+        pct,
+        base: b,
+        gain: gainText(pct, b),
+        note: Number.isFinite(reset) ? `↻ ${untilText(lg, reset)}` : '',
+      }
     }
+    const label = t.startedAt && t.isWorking ? `${L.now} · ${seconds(lg, elapsed)}` : t.startedAt ? `${L.last} · ${seconds(lg, elapsed)}` : L.now
 
     return (
-      <Box flexDirection="column" gap="md" padding="md" backgroundColor={BG}>
-        <Box flexDirection="column" gap="xs" padding="md" backgroundColor={CARD}>
-          <Box flexDirection="row" justifyContent="space-between">
-            <Text weight="bold" size="heading" color={status === 'error' ? RED : FG}>
-              <Text color={A}>● </Text>
-              {STATUS[lg][status]}
-            </Text>
-            <Text mono tabular color={DIM}>
-              {t.startedAt ? seconds(lg, elapsed) : ''}
-            </Text>
-          </Box>
-          {sub && (
-            <Text mono size="footnote" color={DIM} wrap="truncate-end">
-              {sub}
-            </Text>
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT}>
+        <Svg source={statusSvg({ status, label, headline: STATUS[lg][status], detail: sub }, pal)} alt={`${STATUS[lg][status]} ${sub}`} />
+        <Svg
+          source={ringsSvg(
+            [ring('five_hour'), ring('seven_day'), { label: L.session, pct: qt.contextPct, note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote }],
+            pal,
           )}
-        </Box>
-
-        {card(
-          'limits',
-          L.limits,
-          <Box flexDirection="column">
-            {limitRow('five_hour')}
-            {limitRow('seven_day')}
-            {bar('session', L.session, qt.contextPct, undefined, (qt.contextPct ?? 0) >= 80 ? L.compactSoon : '')}
-            <Text size="footnote" color={DIM}>
-              {L.sessionNote}
-            </Text>
-          </Box>,
-          L.limitsNote,
-        )}
+          alt={L.limits}
+        />
+        <Svg
+          source={timeSvg(
+            L.time,
+            timeRows.slice(0, 5).map(([k, ms]) => ({ label: TIME_LABELS[lg][k] ?? k, ms, text: `${seconds(lg, ms)} · ${Math.round((ms / timeTotal) * 100)}%` })),
+            pal,
+            L.timeEmpty,
+          )}
+          alt={L.time}
+        />
 
         {card(
           'results',
@@ -469,32 +429,6 @@ export const register: Register = on => {
                   <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
                     {L.open}
                   </Button>
-                </Box>
-              ))}
-            </Box>
-          ),
-        )}
-
-        {card(
-          'time',
-          L.time,
-          timeRows.length === 0 ? (
-            <Text size="footnote" color={DIM}>
-              {L.timeEmpty}
-            </Text>
-          ) : (
-            <Box flexDirection="column">
-              {timeRows.map(([k, ms]) => (
-                <Box key={`time-${k}`} flexDirection="row" gap={1}>
-                  <Text mono color={FG}>
-                    {(TIME_LABELS[lg][k] ?? k).padEnd(lg === 'ko' ? 4 : 8)}
-                  </Text>
-                  <Text mono color={A}>
-                    {'█'.repeat(Math.max(1, Math.round((ms / timeMax) * 10)))}
-                  </Text>
-                  <Text mono tabular size="footnote" color={DIM}>
-                    {seconds(lg, ms)} · {Math.round((ms / timeTotal) * 100)}%
-                  </Text>
                 </Box>
               ))}
             </Box>
@@ -536,10 +470,10 @@ export const register: Register = on => {
           </Text>,
         )}
 
-        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center">
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" padding="xs">
           {ACCENT_IDS.map(id => (
             <Box key={`accent-row-${id}`} flexDirection="row" gap="xs" alignItems="center">
-              <Text color={id === 'mono' ? FG : ACCENTS[id]}>{id === ac ? '◉' : '●'}</Text>
+              <Text color={ACCENTS[id]}>{id === ac ? '◉' : '●'}</Text>
               <Button
                 key={`accent-${id}`}
                 variant={id === ac ? 'primary' : 'secondary'}

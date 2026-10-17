@@ -1,7 +1,10 @@
 {
   "name": "my-little-mods",
-  "description": "Little side-pane mods for Claude Code: a pixel RPG Adventure Log and a simple dashboard",
-  "owner": { "name": "Sophie", "url": "https://github.com/LetsBeLikeSophie" },
+  "description": "Little side-pane mods for Claude Code: a pixel RPG Adventure Log, a calm dashboard and a warm daily journal",
+  "owner": {
+    "name": "Sophie",
+    "url": "https://github.com/LetsBeLikeSophie"
+  },
   "plugins": [
     {
       "name": "pixel-activity",
@@ -11,7 +14,12 @@
     {
       "name": "simple-dash",
       "source": "./plugins/simple-dash",
-      "description": "A minimal dashboard: what Claude is doing, usage limits, results, time spent and a log"
+      "description": "A calm dashboard: airy white cards, thin rings for the usage limits, and the same status, time, results and log"
+    },
+    {
+      "name": "daily-journal",
+      "source": "./plugins/daily-journal",
+      "description": "A warm daily journal: a sunny now card, pastel limit chips, pill charts, results and log"
     }
   ]
 }
