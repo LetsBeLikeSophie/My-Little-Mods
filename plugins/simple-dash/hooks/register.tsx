@@ -58,6 +58,8 @@ export const ACCENTS: { [K in Accent]: string } = {
   mono: '#A3A8B4',
 }
 const ACCENT_IDS = Object.keys(ACCENTS) as Accent[]
+// Colored emoji keep their color inside the app's native buttons.
+const SWATCH: { [K in Accent]: string } = { blue: '🔵', green: '🟢', purple: '🟣', orange: '🟠', mono: '⚪' }
 
 const THEMES = {
   dark: { BG: '#141620', CARD: '#1F2330', FG: '#E8EAF0', DIM: '#8E95A6', EMPTY: '#2C3142', RED: '#F28B8B' },
@@ -457,25 +459,20 @@ export const register: Register = on => {
 
         {/* Quiet settings: the swatches as dots, then glyph buttons, then the maker. */}
         <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" paddingX="xs">
-          <Text color={DIM}>
-            {ACCENT_IDS.map(id => (
-              <Text key={`dot-${id}`} color={ACCENTS[id]}>
-                {id === ac ? '◉ ' : '● '}
-              </Text>
-            ))}
-          </Text>
-          <Button
-            key="next-accent"
-            label={L.nextColor}
-            variant="secondary"
-            onPress={async () => {
-              const id = ACCENT_IDS[(ACCENT_IDS.indexOf(ac) + 1) % ACCENT_IDS.length]
-              await update($, accent, () => id)
-              await $.store.set('accent', id)
-            }}
-          >
-            🎨
-          </Button>
+          {/* One button per color, the emoji drawn in that color: a tap picks it. */}
+          {ACCENT_IDS.map(id => (
+            <Button
+              key={`accent-${id}`}
+              label={ACCENT_NAMES[lg][id]}
+              variant={id === ac ? 'primary' : 'secondary'}
+              onPress={async () => {
+                await update($, accent, () => id)
+                await $.store.set('accent', id)
+              }}
+            >
+              {SWATCH[id]}
+            </Button>
+          ))}
           <Button
             key="toggle-theme"
             label={th === 'dark' ? L.light : L.dark}

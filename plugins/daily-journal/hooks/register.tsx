@@ -20,7 +20,7 @@ import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i1
 import type { Lang } from './i18n'
 import { alert } from './alerts'
 import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
-import { J, bandSvg, chipsSvg, greetingSvg, nowSvg, statsSvg } from './journal'
+import { J, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
 const TITLE = 'Journal'
@@ -340,11 +340,10 @@ export const register: Register = on => {
     const E = $.ui.resolve(e)
     const { Box, Text, Button, Svg } = E
     const PASTELS = [J.pink, J.lilac, J.mint] as const
+    // Every card alike: white, the same small corner and the same inset on all four sides; the title in serif.
     const card = (key: string, title: string, children: RenderChildren) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.line}>
-        <Text weight="semibold" color={J.ink}>
-          {title}
-        </Text>
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
+        {title && <Svg source={headingSvg(title)} alt={title} />}
         {children}
       </Box>
     )
@@ -365,7 +364,7 @@ export const register: Register = on => {
     const isResting = status === 'waiting' || status === 'done'
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={J.cream}>
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={J.cream} minHeight="100%" flexGrow={1}>
         <Svg source={greetingSvg(L.hello(who), dateLine(lg, at), (who[0] ?? '☺').toUpperCase())} alt={L.hello(who)} />
         <Svg
           source={nowSvg({
@@ -387,42 +386,41 @@ export const register: Register = on => {
         />
         <Svg source={statsSvg(String(mainActs), L.statsCaption, L.statsTitle, pills, L.timeEmpty)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />
 
-        <Box flexDirection="column" gap="sm">
-          <Text weight="semibold" color={J.ink}>
-            {L.results}
-          </Text>
-          {made.length === 0 && (
-            <Box padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.line}>
-              <Text size="footnote" color={J.soft}>
-                {L.resultsEmpty}
-              </Text>
-            </Box>
-          )}
-          {made.slice(0, 4).map((o, i) => (
-              /* One thin pastel strip per result: title, when and kind on a single line. */
-              <Box
-                key={o.href}
-                flexDirection="row"
-                gap="sm"
-                alignItems="center"
-                paddingX="md"
-                paddingY="xs"
-                backgroundColor={PASTELS[i % PASTELS.length]}
-                borderStyle="round"
-                borderColor={PASTELS[i % PASTELS.length]}
-              >
-                <Box flexGrow={1} flexShrink={1}>
-                  <Text size="footnote" weight="semibold" color={J.ink} wrap="truncate-end">
-                    {o.title}
+        {card(
+          'results',
+          L.results,
+          made.length === 0 ? (
+            <Text size="footnote" color={J.soft}>
+              {L.resultsEmpty}
+            </Text>
+          ) : (
+            <Box flexDirection="column" gap="xs">
+              {made.slice(0, 4).map((o, i) => (
+                /* One thin pastel strip per result: title, when and kind on a single line. */
+                <Box
+                  key={o.href}
+                  flexDirection="row"
+                  gap="sm"
+                  alignItems="center"
+                  paddingX="sm"
+                  backgroundColor={PASTELS[i % PASTELS.length]}
+                  borderStyle="round"
+                  borderColor={PASTELS[i % PASTELS.length]}
+                >
+                  <Box flexGrow={1} flexShrink={1}>
+                    <Text size="footnote" weight="semibold" color={J.ink} wrap="truncate-end">
+                      {o.title}
+                    </Text>
+                  </Box>
+                  <Text size="footnote" color={J.soft}>
+                    {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
                   </Text>
+                  {OpenButton(E, $, o.href, L.open, `open-${i}`)}
                 </Box>
-                <Text size="footnote" color={J.soft}>
-                  {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
-                </Text>
-                {OpenButton(E, $, o.href, L.open, `open-${i}`)}
-              </Box>
-          ))}
-        </Box>
+              ))}
+            </Box>
+          ),
+        )}
 
         {card(
           'log',
@@ -430,12 +428,16 @@ export const register: Register = on => {
           LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: J.ink, soft: J.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
         )}
 
-        <Text size="footnote" color={J.soft}>
-          {L.totals} · {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
-        </Text>
+        {card(
+          'totals',
+          L.totals,
+          <Text size="footnote" color={J.ink}>
+            {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
+          </Text>,
+        )}
 
         {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}
-        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" paddingX="md" paddingY="xs" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
+        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
           <Text color={J.sunDeep}>✿</Text>
           {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
               const next = !isAlerting
