@@ -320,7 +320,7 @@ export const register: Register = on => {
     const isAlerting = await read($, alerts)
     const tick = await read($, now)
     const L = UI[lg]
-    const { BG, CARD, FG, DIM, EMPTY, RED } = THEMES[th]
+    const { CARD, FG, DIM, EMPTY, RED } = THEMES[th]
     const A = ACCENTS[ac]
     const pal: Palette = {
       card: CARD,
@@ -331,8 +331,8 @@ export const register: Register = on => {
       glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55),
       rim: A,
     }
-    // The ground stays neutral; the theme color lives in the cards' rims.
-    const TINT = BG
+    // The theme color washes the whole ground; the cards sit on it, plain and borderless.
+    const TINT = th === 'dark' ? lighten(A, -0.84) : lighten(A, 0.8)
 
     const at = Math.max(tick, Date.now())
     const status = statusOf(t, list, at, (await read($, approval)) !== null)
@@ -367,7 +367,7 @@ export const register: Register = on => {
     const E = $.ui.resolve(e)
     const { Box, Text, Button, Svg } = E
     const card = (key: string, title: string, children: RenderChildren) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={A}>
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={CARD}>
         <Text weight="semibold" color={FG}>
           {title}
         </Text>
@@ -397,7 +397,7 @@ export const register: Register = on => {
             : L.now
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT}>
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT} minHeight="100%" flexGrow={1}>
         <Svg source={statusSvg({ status, label, headline: STATUS[lg][status], detail: sub }, pal)} alt={`${STATUS[lg][status]} ${sub}`} />
         <Svg
           source={ringsSvg(
@@ -455,29 +455,30 @@ export const register: Register = on => {
           </Text>,
         )}
 
-        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" padding="xs">
-          {ACCENT_IDS.map(id => (
-            <Box key={`accent-row-${id}`} flexDirection="row" gap="xs" alignItems="center">
-              <Text color={ACCENTS[id]}>{id === ac ? '◉' : '●'}</Text>
-              <Button
-                key={`accent-${id}`}
-                variant={id === ac ? 'primary' : 'secondary'}
-                onPress={async () => {
-                  await update($, accent, () => id)
-                  await $.store.set('accent', id)
-                }}
-              >
-                {ACCENT_NAMES[lg][id]}
-              </Button>
-            </Box>
-          ))}
-          {AlertsButton(E, isAlerting, { on: L.alertsOn, off: L.alertsOff }, async () => {
-              const next = !isAlerting
-              await update($, alerts, () => next)
-              await $.store.set('alerts', next)
-            })}
+        {/* Quiet settings: the swatches as dots, then glyph buttons, then the maker. */}
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" paddingX="xs">
+          <Text color={DIM}>
+            {ACCENT_IDS.map(id => (
+              <Text key={`dot-${id}`} color={ACCENTS[id]}>
+                {id === ac ? '◉ ' : '● '}
+              </Text>
+            ))}
+          </Text>
+          <Button
+            key="next-accent"
+            label={L.nextColor}
+            variant="secondary"
+            onPress={async () => {
+              const id = ACCENT_IDS[(ACCENT_IDS.indexOf(ac) + 1) % ACCENT_IDS.length]
+              await update($, accent, () => id)
+              await $.store.set('accent', id)
+            }}
+          >
+            🎨
+          </Button>
           <Button
             key="toggle-theme"
+            label={th === 'dark' ? L.light : L.dark}
             variant="secondary"
             onPress={async () => {
               const next = th === 'dark' ? 'light' : 'dark'
@@ -485,11 +486,15 @@ export const register: Register = on => {
               await $.store.set('theme', next)
             }}
           >
-            {th === 'dark' ? `☀ ${L.light}` : `☾ ${L.dark}`}
+            {th === 'dark' ? '☀' : '☾'}
           </Button>
+          {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
+            const next = !isAlerting
+            await update($, alerts, () => next)
+            await $.store.set('alerts', next)
+          })}
+          {Credit(E, $, L.madeBy, DIM)}
         </Box>
-
-        {Credit(E, $, L.madeBy, DIM)}
       </Box>
     )
   })

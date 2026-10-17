@@ -52,8 +52,10 @@ test('the dashboard draws on terminal and desktop', async ($, on) => {
 test('picking an accent color sticks', async ($, on) => {
   mock.store(on)
   const ui = await $.ui.mount({ plugin: 'simple-dash', surface: 'desktop', ...PANE })
-  await ui.press({ key: 'accent-green' })
-  expect((await ui.findAll({ type: 'Text', text: /◉/ })).length).toBe(1)
+  await ui.press({ key: 'next-accent' })
+  // blue → green: the second dot is the picked one
+  expect((await ui.findAll({ type: 'Text', text: /^◉/ })).length).toBe(1)
+  expect(await ui.find({ type: 'Text', text: /^● ◉/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /made by Sophie/ })).toBeDefined()
   await ui.unmount()
 })
