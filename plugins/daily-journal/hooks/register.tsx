@@ -409,7 +409,7 @@ export const register: Register = on => {
                     {o.title}
                   </Text>
                   <Text size="footnote" color={J.soft}>
-                    {ago(lg, at - o.at)} · {o.kind === 'artifact' ? 'Artifact' : 'File'}
+                    {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
                   </Text>
                 </Box>
                 <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
