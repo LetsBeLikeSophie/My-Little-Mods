@@ -47,19 +47,19 @@ In the Claude desktop app, where `/plugin` does not run: click **+** next to the
 - The sky follows the real time of day. Light and dark themes; Korean or English by system language.
 - **Alerts:** when Claude waits for your approval the hero raises a hand, and after a few seconds a Windows notification and a sound follow; a request that ran 30s or more pings when done. Toggle with the 🔔 button.
 - **Level & XP:** finished requests, slain bugs and actions add up across sessions.
-- Open with `/pixel` · change hero with `/pixel mage cat`
+- Open with `/rpg` · change hero with `/rpg mage cat`
 
 ## simple-dash
 
 - A status card with a thin line icon, the usage limits as three thin rings (the glowing part = what the last request used), where the time went, results and a log.
 - Accent colors: blue, green, purple, orange, mono. Light and dark.
 - Alerts for approvals and long requests (toggle), and all-time totals.
-- Open with `/dash` · change color with `/dash green`
+- Open with `/calm` · change color with `/calm green`
 
 ## daily-journal
 
 - A greeting with your name, a sunny "now" card whose little face changes with the status, the limits as pastel chips, a big number beside pill bars of where the time went, results as pastel cards, and a log.
-- Open with `/journal` · set your name with `/journal name Sophie` (otherwise your git name)
+- Open with `/day` · set your name with `/day name Sophie` (otherwise your git name)
 
 ## Good to know
 

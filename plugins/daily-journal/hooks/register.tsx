@@ -104,7 +104,7 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'journal', description: `${UI.ko.command} / ${UI.en.command}` })
+    await $.command.register({ name: 'day', description: `${UI.ko.command} / ${UI.en.command}` })
     void guessName($).then(n => update($, name, () => n)).catch(() => undefined)
     const savedAlerts = await $.store.get('alerts')
     if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
@@ -119,7 +119,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'journal' }, async ($, e) => {
+  on('command.run', { command: 'day' }, async ($, e) => {
     const lg = await read($, lang)
     const m = /^name\s+(.+)$/i.exec(e.args.trim())
     const who = m?.[1]?.trim().slice(0, 24) ?? ''
@@ -345,7 +345,7 @@ export const register: Register = on => {
     const { Box, Text, Button, Svg } = $.ui.resolve(e)
     const PASTELS = [J.pink, J.lilac, J.mint] as const
     const card = (key: string, title: string, children: RenderChildren) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card}>
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.line}>
         <Text weight="semibold" color={J.ink}>
           {title}
         </Text>
@@ -396,14 +396,14 @@ export const register: Register = on => {
             {L.results}
           </Text>
           {made.length === 0 && (
-            <Box padding="md" backgroundColor={J.card}>
+            <Box padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.line}>
               <Text size="footnote" color={J.soft}>
                 {L.resultsEmpty}
               </Text>
             </Box>
           )}
           {made.slice(0, 4).map((o, i) => (
-              <Box key={o.href} flexDirection="row" gap="sm" alignItems="center" padding="md" backgroundColor={PASTELS[i % PASTELS.length]}>
+              <Box key={o.href} flexDirection="row" gap="sm" alignItems="center" padding="md" backgroundColor={PASTELS[i % PASTELS.length]} borderStyle="round" borderColor={PASTELS[i % PASTELS.length]}>
                 <Box flexDirection="column" flexGrow={1}>
                   <Text weight="semibold" color={J.ink} wrap="truncate-end">
                     {o.title}

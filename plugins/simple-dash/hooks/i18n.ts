@@ -114,8 +114,8 @@ export const UI = {
     totalsLine: (q: number, c: number, a: number) => `요청 ${q.toLocaleString()} · 테스트 통과 ${c.toLocaleString()} · 작업 ${a.toLocaleString()}`,
     logMore: '전체 보기',
     logLess: '접기',
-    command: '심플 대시보드 열기 (색: /dash blue|green|purple|orange|mono)',
-    opened: '심플 대시보드를 열었어요.',
+    command: 'Calm 대시보드 열기 (색: /calm blue|green|purple|orange|mono)',
+    opened: 'Calm 대시보드를 열었어요.',
     colored: (name: string) => `색을 ${name}(으)로 바꿨어요.`,
   },
   en: {
@@ -152,8 +152,8 @@ export const UI = {
     totalsLine: (q: number, c: number, a: number) => `Requests ${q.toLocaleString()} · Checks passed ${c.toLocaleString()} · Actions ${a.toLocaleString()}`,
     logMore: 'Show all',
     logLess: 'Collapse',
-    command: 'Open the simple dashboard (color: /dash blue|green|purple|orange|mono)',
-    opened: 'Opened the simple dashboard.',
+    command: 'Open the Calm dashboard (color: /calm blue|green|purple|orange|mono)',
+    opened: 'Opened the Calm dashboard.',
     colored: (name: string) => `Accent color is now ${name}.`,
   },
 } as const

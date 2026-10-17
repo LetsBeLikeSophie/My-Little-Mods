@@ -7,7 +7,7 @@ import type { Status } from './core'
 const FONT = "'Segoe UI Variable Display','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif"
 const W = 320
 
-export type Palette = { card: string; ink: string; soft: string; track: string; accent: string; glow: string }
+export type Palette = { card: string; ink: string; soft: string; track: string; accent: string; glow: string; rim: string }
 
 function esc(t: string): string {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -88,8 +88,7 @@ export function statusSvg(d: StatusCard, p: Palette): string {
   const isAsking = d.status === 'approval'
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">` +
-    `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="26" fill="${isAsking ? p.glow : p.card}"` +
-    (isAsking ? ` stroke="${p.accent}" stroke-width="3"` : '') +
+    `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="26" fill="${isAsking ? p.glow : p.card}" stroke="${p.rim}" stroke-width="${isAsking ? 3 : 1.5}"` +
     `/>` +
     `<g transform="translate(26 ${(H - 100 * s) / 2}) scale(${s})">` +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${p.accent}"/>` +
@@ -126,7 +125,7 @@ export function ringsSvg(rings: readonly Ring[], p: Palette): string {
     const r = 28
     const now = g.pct === null ? 0 : Math.max(0, Math.min(1, g.pct / 100))
     const was = g.base === null || g.base === undefined ? now : Math.max(0, Math.min(now, g.base / 100))
-    body += `<rect x="${x}" y="4" width="${w}" height="${H - 8}" rx="24" fill="${p.card}"/>`
+    body += `<rect x="${x}" y="4" width="${w}" height="${H - 8}" rx="24" fill="${p.card}" stroke="${p.rim}" stroke-width="1.5"/>`
     body += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${p.track}" stroke-width="4"/>`
     if (was > 0) body += `<path d="${arc(cx, cy, r, 0, was)}" fill="none" stroke="${p.accent}" stroke-width="4" stroke-linecap="round"/>`
     if (now > was) body += `<path d="${arc(cx, cy, r, was, now)}" fill="none" stroke="${p.glow}" stroke-width="4" stroke-linecap="round"/>`
@@ -147,7 +146,7 @@ export function timeSvg(title: string, rows: readonly TimeRow[], p: Palette, emp
   const max = Math.max(1, ...rows.map(r => r.ms))
   const labelW = 64
   const barMax = W - 32 - labelW - 92
-  let body = `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="24" fill="${p.card}"/>`
+  let body = `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="24" fill="${p.card}" stroke="${p.rim}" stroke-width="1.5"/>`
   body += text(22, 36, 13, 600, p.ink, title)
   if (rows.length === 0) body += text(22, 64, 12, 400, p.soft, empty)
   rows.forEach((r, i) => {

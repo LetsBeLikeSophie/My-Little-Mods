@@ -677,12 +677,20 @@ function scene(kind: Scene, k: Ctx): { layers: string; fire: boolean } {
       return { layers: cycle(fs, 0.3), fire: true }
     }
     case 'approval': {
-      // Waiting on the person: a hand up high and a blinking "!".
-      const fs = frames(2, (p, f) => {
+      // Waiting on the person: a hand up high, and beside the head a big red "!"
+      // badge that pulses and hops, kept clear of the speech bubble above.
+      const fs = frames(4, (p, f) => {
         const x = 104
         const fy = 86
-        fig(p, { x, fy, l: [x - 8, fy - 8], r: [x + 6, fy - 34 - f] })
-        if (f === 0) { p.R(x + 12, fy - 48, 2, 6, '#E03131'); p.R(x + 12, fy - 40, 2, 2, '#E03131') }
+        fig(p, { x, fy, l: [x - 8, fy - 8], r: [x + 6, fy - 34 - (f % 2)] })
+        const bx = x - 22
+        const by = fy - 44 - (f === 1 ? 2 : 0)
+        const big = f % 2 === 0
+        disc(p, bx, by, big ? 7 : 6, '#7A1010')
+        disc(p, bx, by, big ? 6 : 5, '#E03131')
+        p.R(bx - 1, by - 4, 2, 5, '#FFFFFF')
+        p.R(bx - 1, by + 2, 2, 2, '#FFFFFF')
+        if (big) { p.R(bx - 11, by - 1, 2, 1, '#FFD166'); p.R(bx + 9, by - 1, 2, 1, '#FFD166'); p.R(bx - 1, by - 11, 1, 2, '#FFD166') }
       })
       return { layers: cycle(fs, 0.35), fire: true }
     }
@@ -1077,10 +1085,14 @@ export function campSvg(
   const bx = Math.max(VIEW.x + 2, Math.min(VIEW.x + VIEW.w - bw - 2, hx - bw / 2))
   const by = 29
   const tail = Math.max(bx + 3, Math.min(bx + bw - 6, hx - 1))
+  // Asking for approval: the bubble gets a red rim and red words.
+  const rim = kind === 'approval' ? '#E03131' : '#FFFFFF'
+  const ink = kind === 'approval' ? '#C0392B' : '#2A2320'
   const speech = say
-    ? `<rect x="${bx + 1}" y="${by}" width="${bw - 2}" height="13" fill="#FFFFFF"/><rect x="${bx}" y="${by + 1}" width="${bw}" height="11" fill="#FFFFFF"/>` +
+    ? `<rect x="${bx}" y="${by - 1}" width="${bw}" height="15" fill="${rim}"/><rect x="${bx - 1}" y="${by}" width="${bw + 2}" height="13" fill="${rim}"/>` +
+      `<rect x="${bx + 1}" y="${by}" width="${bw - 2}" height="13" fill="#FFFFFF"/><rect x="${bx}" y="${by + 1}" width="${bw}" height="11" fill="#FFFFFF"/>` +
       `<rect x="${tail}" y="${by + 13}" width="3" height="2" fill="#FFFFFF"/><rect x="${tail + 1}" y="${by + 15}" width="1" height="1" fill="#FFFFFF"/>` +
-      `<text x="${bx + 4}" y="${by + 10}" font-size="9" fill="#2A2320">${esc(say)}</text>`
+      `<text x="${bx + 4}" y="${by + 10}" font-size="9" fill="${ink}">${esc(say)}</text>`
     : ''
 
   const style = `<style>${font ? `@font-face{font-family:px;src:url(${font}) format('woff')}` : ''}text{font-family:px,'Galmuri11',monospace;shape-rendering:auto}</style>`

@@ -277,7 +277,7 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'pixel', description: `${UI.ko.command} / ${UI.en.command}` })
+    await $.command.register({ name: 'rpg', description: `${UI.ko.command} / ${UI.en.command}` })
     const savedSp = await $.store.get('species')
     const savedJob = await $.store.get('job')
     if (isSpecies(savedSp)) await update($, species, () => savedSp)
@@ -297,7 +297,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'pixel' }, async ($, e) => {
+  on('command.run', { command: 'rpg' }, async ($, e) => {
     const words = e.args.trim().split(/\s+/).filter(Boolean)
     const lg = await read($, lang)
     const said: string[] = []

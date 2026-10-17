@@ -25,7 +25,7 @@ import { ringsSvg, statusSvg, timeSvg } from './calm'
 import type { Palette } from './calm'
 
 const PANE = 'simple-dash'
-const TITLE = 'Dashboard'
+const TITLE = 'Calm'
 const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 const LOG_LINES = 6
 const BAR = 16
@@ -109,7 +109,7 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'dash', description: `${UI.ko.command} / ${UI.en.command}` })
+    await $.command.register({ name: 'calm', description: `${UI.ko.command} / ${UI.en.command}` })
     const savedAccent = await $.store.get('accent')
     if (isAccent(savedAccent)) await update($, accent, () => savedAccent)
     const savedTheme = await $.store.get('theme')
@@ -127,7 +127,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'dash' }, async ($, e) => {
+  on('command.run', { command: 'calm' }, async ($, e) => {
     const lg = await read($, lang)
     const want = e.args.trim()
     if (isAccent(want)) {
@@ -329,9 +329,10 @@ export const register: Register = on => {
       track: EMPTY,
       accent: A,
       glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55),
+      rim: A,
     }
-    // The pane's own background: a whisper of the accent on light, deep slate on dark.
-    const TINT = th === 'dark' ? BG : lighten(A, 0.82)
+    // The ground stays neutral; the theme color lives in the cards' rims.
+    const TINT = BG
 
     const at = Math.max(tick, Date.now())
     const status = statusOf(t, list, at, (await read($, approval)) !== null)
@@ -366,7 +367,7 @@ export const register: Register = on => {
 
     const { Box, Text, Button, Svg } = $.ui.resolve(e)
     const card = (key: string, title: string, children: RenderChildren) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={A}>
         <Text weight="semibold" color={FG}>
           {title}
         </Text>
