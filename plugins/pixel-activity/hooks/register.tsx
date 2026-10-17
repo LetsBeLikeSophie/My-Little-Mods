@@ -449,7 +449,7 @@ export const register: Register = on => {
       update($, show, (s: { legend: boolean; picker: boolean }) => ({ ...s, [key]: !s[key] }))
 
     return (
-      <Box flexDirection="column" gap={1} padding={1} backgroundColor={BG}>
+      <Box flexDirection="column" gap="md" padding="md" backgroundColor={BG}>
         <Svg
           source={campSvg(
             sp,
@@ -513,7 +513,7 @@ export const register: Register = on => {
           alt={`${L.hp} ${qt.limits.find(l => l.kind === 'five_hour')?.percentUsed ?? '–'}% · ${L.xp} ${qt.limits.find(l => l.kind === 'seven_day')?.percentUsed ?? '–'}%`}
         />
 
-        <Box flexDirection="column" padding={1} backgroundColor={CARD}>
+        <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
           {heading(L.timeSpent)}
           {Object.values(used).some(ms => ms >= 500) ? (
             <Svg
@@ -525,31 +525,32 @@ export const register: Register = on => {
           )}
         </Box>
 
-        <Box flexDirection="column" padding={1} backgroundColor={CARD}>
+        <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
           {heading(L.results)}
           {made.length === 0 ? (
             <Text color={DIM}>{L.resultsEmpty}</Text>
           ) : (
             made.slice(0, 4).map((o, i) => (
-              <Box key={o.href} flexDirection="row" gap={1}>
+              <Box key={o.href} flexDirection="row" gap="sm" alignItems="center">
                 <Text color={i === 0 ? GOLD : DIM}>{o.kind === 'artifact' ? '🔗' : '📄'}</Text>
-                {/* A Link can't take the theme's color (blue is lost on dark), so a plain
-                    Button opens it: a URL in the browser, a file in its own app. */}
-                <Button key={`open-${i}`} plain onPress={() => void $.process.run(['explorer.exe', o.href])}>
-                  <Text color={i === 0 ? GOLD : FG} underline>
-                    {o.title}
-                  </Text>
-                </Button>
-                <Text color={DIM}>
+                {/* The desktop draws a Button as its own native button and ignores the
+                    color inside, so the title is plain themed text beside an Open button. */}
+                <Text color={i === 0 ? GOLD : FG} wrap="truncate-end">
+                  {o.title}
+                </Text>
+                <Text size="footnote" color={DIM}>
                   {i === 0 ? L.latest : ''}
                   {ago(lg, at - o.at)}
                 </Text>
+                <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
+                  {L.open}
+                </Button>
               </Box>
             ))
           )}
         </Box>
 
-        <Box flexDirection="column" padding={1} backgroundColor={CARD}>
+        <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
           {heading(L.log)}
           {log.length === 0 && (
             <Text mono color={DIM}>
@@ -557,24 +558,24 @@ export const register: Register = on => {
             </Text>
           )}
           {log.map(a => (
-            <Button
+            <Text
               key={`log-${a.id}`}
-              plain
-              onPress={() => update($, logOpen, (v: string) => (v === a.id ? '' : a.id))}
+              mono
+              size="footnote"
+              wrap={opened ? 'wrap' : 'truncate-end'}
+              color={a.isError ? RED : a.endedAt === null ? FG : DIM}
             >
-              <Text
-                mono
-                size="footnote"
-                wrap={opened === a.id ? 'wrap' : 'truncate-end'}
-                color={a.isError ? RED : a.endedAt === null ? FG : DIM}
-              >
-                {logLine(a, lg, opened === a.id)}
-              </Text>
-            </Button>
+              {logLine(a, lg, Boolean(opened))}
+            </Text>
           ))}
+          {log.length > 0 && (
+            <Button key="log-toggle" variant="secondary" onPress={() => update($, logOpen, (v: string) => (v ? '' : 'all'))}>
+              {opened ? L.logLess : L.logMore}
+            </Button>
+          )}
         </Box>
 
-        <Box flexDirection="row" gap={1}>
+        <Box flexDirection="row" gap="sm" flexWrap="wrap">
           <Button key="toggle-legend" variant="secondary" onPress={toggle('legend')}>
             {sh.legend ? L.legendClose : L.legendOpen}
           </Button>
@@ -595,7 +596,7 @@ export const register: Register = on => {
         </Box>
 
         {sh.legend && (
-          <Box flexDirection="column" gap={1} padding={1} backgroundColor={CARD}>
+          <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
             {LEGEND_GROUPS.map(([group, scenes]) => (
               <Box key={`legend-${group}`} flexDirection="column">
                 {heading(L[group])}
@@ -619,7 +620,7 @@ export const register: Register = on => {
         )}
 
         {sh.picker && (
-          <Box flexDirection="column" gap={1} padding={1} backgroundColor={CARD}>
+          <Box flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
             {heading(L.jobs)}
             <Box flexDirection="row" gap={1} flexWrap="wrap">
               {JOB_IDS.map(id => (
@@ -655,11 +656,14 @@ export const register: Register = on => {
             </Box>
           </Box>
         )}
-        <Button key="credit" plain onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
-          <Text size="footnote" color={DIM} underline>
+        <Box flexDirection="row" gap="sm" alignItems="center">
+          <Text key="credit" size="footnote" color={DIM}>
             {L.madeBy}
           </Text>
-        </Button>
+          <Button key="credit-link" variant="secondary" onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
+            GitHub
+          </Button>
+        </Box>
       </Box>
     )
   })

@@ -265,7 +265,7 @@ export const register: Register = on => {
 
     const { Box, Text, Button } = $.ui.resolve(e)
     const card = (key: string, title: string, children: RenderChildren, note?: string) => (
-      <Box key={key} flexDirection="column" padding={1} backgroundColor={CARD}>
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD}>
         <Box flexDirection="row" gap={1}>
           <Text size="footnote" weight="semibold" color={DIM}>
             {title}
@@ -327,8 +327,8 @@ export const register: Register = on => {
     }
 
     return (
-      <Box flexDirection="column" gap={1} padding={1} backgroundColor={BG}>
-        <Box flexDirection="column" padding={1} backgroundColor={CARD}>
+      <Box flexDirection="column" gap="md" padding="md" backgroundColor={BG}>
+        <Box flexDirection="column" gap="xs" padding="md" backgroundColor={CARD}>
           <Box flexDirection="row" justifyContent="space-between">
             <Text weight="bold" size="heading" color={status === 'error' ? RED : FG}>
               <Text color={A}>● </Text>
@@ -369,15 +369,17 @@ export const register: Register = on => {
           ) : (
             <Box flexDirection="column">
               {made.slice(0, 4).map((o, i) => (
-                <Box key={o.href} flexDirection="row" gap={1}>
-                  <Button key={`open-${i}`} plain onPress={() => void $.process.run(['explorer.exe', o.href])}>
-                    <Text color={i === 0 ? A : FG} underline>
-                      {o.title}
-                    </Text>
-                  </Button>
+                <Box key={o.href} flexDirection="row" gap="sm" alignItems="center">
+                  {/* A desktop Button is native and ignores the color inside it: themed text plus an Open button. */}
+                  <Text color={i === 0 ? A : FG} wrap="truncate-end">
+                    {o.title}
+                  </Text>
                   <Text size="footnote" color={DIM}>
                     {ago(lg, at - o.at)}
                   </Text>
+                  <Button key={`open-${i}`} variant="secondary" onPress={() => void $.process.run(['explorer.exe', o.href])}>
+                    {L.open}
+                  </Button>
                 </Box>
               ))}
             </Box>
@@ -420,54 +422,60 @@ export const register: Register = on => {
           ) : (
             <Box flexDirection="column">
               {log.map(a => (
-                <Button key={`log-${a.id}`} plain onPress={() => update($, logOpen, (v: string) => (v === a.id ? '' : a.id))}>
-                  <Text
-                    mono
-                    size="footnote"
-                    wrap={opened === a.id ? 'wrap' : 'truncate-end'}
-                    color={a.isError ? RED : a.endedAt === null ? FG : DIM}
-                  >
-                    {logLine(a, lg, opened === a.id)}
-                  </Text>
-                </Button>
+                <Text
+                  key={`log-${a.id}`}
+                  mono
+                  size="footnote"
+                  wrap={opened ? 'wrap' : 'truncate-end'}
+                  color={a.isError ? RED : a.endedAt === null ? FG : DIM}
+                >
+                  {logLine(a, lg, Boolean(opened))}
+                </Text>
               ))}
+              <Button key="log-toggle" variant="secondary" onPress={() => update($, logOpen, (v: string) => (v ? '' : 'all'))}>
+                {opened ? L.logLess : L.logMore}
+              </Button>
             </Box>
           ),
         )}
 
-        <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center">
           {ACCENT_IDS.map(id => (
-            <Button
-              key={`accent-${id}`}
-              plain
-              onPress={async () => {
-                await update($, accent, () => id)
-                await $.store.set('accent', id)
-              }}
-            >
-              <Text color={id === 'mono' ? FG : ACCENTS[id]} weight={id === ac ? 'bold' : 'regular'}>
-                {id === ac ? '◉' : '○'} {ACCENT_NAMES[lg][id]}
-              </Text>
-            </Button>
+            <Box key={`accent-row-${id}`} flexDirection="row" gap="xs" alignItems="center">
+              <Text color={id === 'mono' ? FG : ACCENTS[id]}>{id === ac ? '◉' : '●'}</Text>
+              <Button
+                key={`accent-${id}`}
+                variant={id === ac ? 'primary' : 'secondary'}
+                onPress={async () => {
+                  await update($, accent, () => id)
+                  await $.store.set('accent', id)
+                }}
+              >
+                {ACCENT_NAMES[lg][id]}
+              </Button>
+            </Box>
           ))}
           <Button
             key="toggle-theme"
-            plain
+            variant="secondary"
             onPress={async () => {
               const next = th === 'dark' ? 'light' : 'dark'
               await update($, theme, () => next)
               await $.store.set('theme', next)
             }}
           >
-            <Text color={DIM}>{th === 'dark' ? `☀ ${L.light}` : `☾ ${L.dark}`}</Text>
+            {th === 'dark' ? `☀ ${L.light}` : `☾ ${L.dark}`}
           </Button>
         </Box>
 
-        <Button key="credit" plain onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
-          <Text size="footnote" color={DIM} underline>
+        <Box flexDirection="row" gap="sm" alignItems="center">
+          <Text key="credit" size="footnote" color={DIM}>
             {L.madeBy}
           </Text>
-        </Button>
+          <Button key="credit-link" variant="secondary" onPress={() => void $.process.run(['explorer.exe', MAKER_URL])}>
+            GitHub
+          </Button>
+        </Box>
       </Box>
     )
   })

@@ -198,10 +198,10 @@ test('a log line opens to its whole text on a click', async ($, on) => {
   const long = 'npx some-really-long-command --with --many --flags --that --go --on --and --on --past --the --edge'
   await $.tool.call({ tool: 'Bash', command: long })
   const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
-  const line = await ui.find({ type: 'Button', text: /some-really-long/ })
+  const line = await ui.find({ type: 'Text', text: /some-really-long/ })
   expect(line?.text).not.toContain('--edge')
-  await ui.press({ key: line!.key! })
-  expect((await ui.find({ type: 'Button', text: /some-really-long/ }))?.text).toContain('--edge')
+  await ui.press({ key: 'log-toggle' })
+  expect((await ui.find({ type: 'Text', text: /some-really-long/ }))?.text).toContain('--edge')
   await ui.unmount()
 })
 
@@ -223,6 +223,7 @@ test('a request shows what it used of the limits, XP-style', async () => {
 test('the maker credit is a button to the GitHub page', async ($, on) => {
   mock.store(on)
   const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
-  expect(await ui.find({ key: 'credit', text: /made by Sophie/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /made by Sophie/ })).toBeDefined()
+  expect(await ui.find({ key: 'credit-link' })).toBeDefined()
   await ui.unmount()
 })
