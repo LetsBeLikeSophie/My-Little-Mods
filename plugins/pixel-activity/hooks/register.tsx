@@ -279,9 +279,9 @@ export const register: Register = on => {
       const lg = await read($, lang)
       const isNative = await read($, alerts)
       if (after > before) {
-        void alertIfShown($, PANE, { title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
       } else if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
-        void alertIfShown($, PANE, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
       }
     }
 
@@ -364,7 +364,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }

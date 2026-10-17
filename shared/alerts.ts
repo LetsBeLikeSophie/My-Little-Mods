@@ -9,16 +9,33 @@ import type { EngineInterface } from 'claude-code'
 // command line, so a tool name or title can't break out of the string.
 const TOAST_PS = [
   '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null',
-  '$t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)',
-  "$x = $t.GetElementsByTagName('text')",
-  '$x.Item(0).AppendChild($t.CreateTextNode($env:MLM_TITLE)) | Out-Null',
-  '$x.Item(1).AppendChild($t.CreateTextNode($env:MLM_BODY)) | Out-Null',
-  "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe').Show([Windows.UI.Notifications.ToastNotification]::new($t))",
+  '[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null',
+  '$d = New-Object Windows.Data.Xml.Dom.XmlDocument',
+  `$d.LoadXml('<toast><visual><binding template="ToastGeneric"><text/><text/></binding></visual></toast>')`,
+  "$b = $d.GetElementsByTagName('binding').Item(0)",
+  "$x = $d.GetElementsByTagName('text')",
+  '$x.Item(0).AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null',
+  '$x.Item(1).AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null',
+  // the mod's name as the small attribution line, its round logo and its wide picture
+  "if ($env:MLM_TAG) { $e = $d.CreateElement('text'); $e.SetAttribute('placement', 'attribution'); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }",
+  "if ($env:MLM_LOGO) { $e = $d.CreateElement('image'); $e.SetAttribute('placement', 'appLogoOverride'); $e.SetAttribute('hint-crop', 'circle'); $e.SetAttribute('src', $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }",
+  "if ($env:MLM_HERO) { $e = $d.CreateElement('image'); $e.SetAttribute('placement', 'hero'); $e.SetAttribute('src', $env:MLM_HERO); $b.AppendChild($e) | Out-Null }",
+  // our own sound plays beside it, so the toast keeps quiet
+  "if ($env:MLM_SILENT) { $e = $d.CreateElement('audio'); $e.SetAttribute('silent', 'true'); $d.DocumentElement.AppendChild($e) | Out-Null }",
+  "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe').Show([Windows.UI.Notifications.ToastNotification]::new($d))",
 ].join('; ')
 
 const SOUND_PS = '(New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync()'
 
-export type Alert = { title: string; body: string; sound?: string; isNative: boolean }
+/** How a mod dresses its notification: its name, and pictures shipped with it (paths under the mod's folder). */
+export type AlertLook = { tag: string; logo?: string; hero?: string }
+
+export type Alert = { title: string; body: string; sound?: string; isNative: boolean; look?: AlertLook }
+
+/** A file of the mod's as the file:/// address a Windows toast reads pictures from. */
+function fileUrl($: EngineInterface, rel: string): string {
+  return `file:///${`${$.plugin.root}/${rel}`.replace(/\\/g, '/')}`
+}
 
 export async function alert($: EngineInterface, a: Alert): Promise<void> {
   $.ui.toast(`${a.title} · ${a.body}`)
@@ -32,7 +49,17 @@ export async function alert($: EngineInterface, a: Alert): Promise<void> {
   const sent = await $.ui.notify(a.body, { title: a.title }).catch(() => undefined)
   if (!sent?.isSent) {
     await $.process
-      .run(['powershell', '-NoProfile', '-Command', TOAST_PS], { env: { MLM_TITLE: a.title, MLM_BODY: a.body }, timeoutMs: 15_000 })
+      .run(['powershell', '-NoProfile', '-Command', TOAST_PS], {
+        env: {
+          MLM_TITLE: a.title,
+          MLM_BODY: a.body,
+          MLM_TAG: a.look?.tag ?? '',
+          MLM_LOGO: a.look?.logo ? fileUrl($, a.look.logo) : '',
+          MLM_HERO: a.look?.hero ? fileUrl($, a.look.hero) : '',
+          MLM_SILENT: a.sound ? '1' : '',
+        },
+        timeoutMs: 15_000,
+      })
       .catch(() => undefined)
   }
   if (a.sound) {

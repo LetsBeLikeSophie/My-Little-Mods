@@ -57,6 +57,12 @@ export const ACCENTS: { [K in Accent]: string } = {
   mono: '#A3A8B4',
 }
 const ACCENT_IDS = Object.keys(ACCENTS) as Accent[]
+/** The notification dressed in the chosen color: its leaf logo and soft rings. */
+async function calmLook($: EngineInterface) {
+  const ac = await read($, accent)
+  return { tag: '🍃 Calm', logo: `images/logo-${ac}.png`, hero: `images/hero-${ac}.png` }
+}
+
 // Colored emoji keep their color inside the app's native buttons.
 const SWATCH: { [K in Accent]: string } = { blue: '🔵', green: '🟢', purple: '🟣', orange: '🟠', mono: '⚪' }
 
@@ -165,7 +171,7 @@ export const register: Register = on => {
       await $.store.set('life', l)
       if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
         const lg = await read($, lang)
-        void alertIfShown($, PANE, { title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
+        void alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
       }
     }
 
@@ -235,7 +241,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }
