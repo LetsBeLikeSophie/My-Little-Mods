@@ -84,14 +84,18 @@ export function statusSvg(d: StatusCard, p: Palette): string {
   const [cx, cy, r] = DOT[d.status]
   const room = W - 112 - 24
   const size = fitSize(d.headline, 24, room)
+  // Waiting on the person: the card takes the accent's glow and an accent ring, and the label speaks up.
+  const isAsking = d.status === 'approval'
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">` +
-    `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="26" fill="${p.card}"/>` +
+    `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="26" fill="${isAsking ? p.glow : p.card}"` +
+    (isAsking ? ` stroke="${p.accent}" stroke-width="3"` : '') +
+    `/>` +
     `<g transform="translate(26 ${(H - 100 * s) / 2}) scale(${s})">` +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${p.accent}"/>` +
     `<path d="${ICONS[d.status]}" fill="none" stroke="${p.ink}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>` +
     `</g>` +
-    text(112, 38, 12, 400, p.soft, clip(d.label, 12, room)) +
+    text(112, 38, 12, isAsking ? 700 : 400, isAsking ? p.ink : p.soft, clip(d.label, 12, room)) +
     text(112, 42 + size, size, 300, p.ink, clip(d.headline, size, room)) +
     (d.detail ? text(112, 86, 11.5, 400, p.soft, clip(d.detail, 11.5, room)) : '') +
     `</svg>`

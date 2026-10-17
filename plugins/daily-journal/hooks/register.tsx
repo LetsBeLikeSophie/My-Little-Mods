@@ -374,7 +374,7 @@ export const register: Register = on => {
         <Svg
           source={nowSvg({
             status,
-            label: t.isWorking ? L.now : L.last,
+            label: status === 'approval' ? L.askNow : t.isWorking ? L.now : L.last,
             title: STATUS[lg][status],
             detail: sub || (isResting ? L.restLine : ''),
             tag: t.startedAt ? (t.isWorking ? L.tagTyping(seconds(lg, elapsed)) : seconds(lg, elapsed)) : '',

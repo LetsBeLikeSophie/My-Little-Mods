@@ -386,7 +386,14 @@ export const register: Register = on => {
         note: Number.isFinite(reset) ? `↻ ${untilText(lg, reset)}` : '',
       }
     }
-    const label = t.startedAt && t.isWorking ? `${L.now} · ${seconds(lg, elapsed)}` : t.startedAt ? `${L.last} · ${seconds(lg, elapsed)}` : L.now
+    const label =
+      status === 'approval'
+        ? L.askNow
+        : t.startedAt && t.isWorking
+          ? `${L.now} · ${seconds(lg, elapsed)}`
+          : t.startedAt
+            ? `${L.last} · ${seconds(lg, elapsed)}`
+            : L.now
 
     return (
       <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT}>

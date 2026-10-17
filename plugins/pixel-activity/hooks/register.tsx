@@ -591,6 +591,9 @@ export const register: Register = on => {
               return L.level(lv.level, lv.into, lv.need)
             })()}
           </Text>
+          <Text tabular size="footnote" color={DIM}>
+            {L.record(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
+          </Text>
         </Box>
         <Svg
           source={hudSvg(

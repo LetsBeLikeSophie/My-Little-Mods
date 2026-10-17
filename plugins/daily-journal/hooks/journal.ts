@@ -73,6 +73,18 @@ function mascot(status: Status, cx: number, cy: number): string {
       ? `<path d="M${cx - 5} ${y + 6} Q${cx} ${y + 10} ${cx + 5} ${y + 6}" stroke="${J.ink}" stroke-width="2" fill="none" stroke-linecap="round"/>`
       : `<path d="M${cx - 4} ${y + 9} Q${cx} ${y + 6} ${cx + 4} ${y + 9}" stroke="${J.ink}" stroke-width="2" fill="none" stroke-linecap="round"/>`) +
     `<circle cx="${cx - 12}" cy="${y + 5}" r="3" fill="#FF8A80" opacity=".55"/><circle cx="${cx + 12}" cy="${y + 5}" r="3" fill="#FF8A80" opacity=".55"/>`
+  if (status === 'approval') {
+    // waving for attention: the sun raises a hand, a little "!" beside it
+    return (
+      `<circle cx="${cx}" cy="${cy}" r="24" fill="${J.sunDeep}"/>` +
+      face(cy - 2, true) +
+      `<path d="M${cx + 20} ${cy - 6} Q${cx + 30} ${cy - 18} ${cx + 30} ${cy - 30}" stroke="${J.sunDeep}" stroke-width="6" fill="none" stroke-linecap="round"/>` +
+      `<circle cx="${cx + 30}" cy="${cy - 34}" r="7" fill="${J.sunDeep}"/>` +
+      `<path d="M${cx + 40} ${cy - 44} q4 4 0 10 M${cx + 22} ${cy - 46} q-4 4 0 10" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>` +
+      `<rect x="${cx - 40}" y="${cy - 46}" width="22" height="22" rx="11" fill="#FFFFFF"/>` +
+      text(cx - 29, cy - 29, 15, 800, '#E0533D', '!', 'middle')
+    )
+  }
   if (status === 'waiting' || status === 'done') {
     // resting: a crescent moon
     return (
