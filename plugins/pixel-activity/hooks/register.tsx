@@ -4,14 +4,14 @@ import type { EngineInterface, Register, SessionRateLimit, Timer } from 'claude-
 import type { Act, ActKind, Job, Output, Species, Turn } from '../types'
 import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, walkSeconds } from './camp'
 import { busyMs, statsSvg } from './stats'
-import { hudSvg } from './hud'
+import { gainText, hudSvg } from './hud'
 import type { Scene } from './camp'
 import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
 import type { Lang } from './i18n'
 
 const PANE = 'pixel-activity'
-const MAKER_URL = 'https://github.com/LetsBeLikeSophie'
+const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 const TITLE = 'Adventure Log'
 
 const acts = atom({ plugin: 'pixel-activity', key: 'acts' } as const, [])
@@ -378,6 +378,42 @@ export const register: Register = on => {
     spinner = { word: e.props.message ?? e.props.word, at: Date.now() }
 
     return next(e)
+  })
+
+  // One line above the prompt: what the hero is doing and the usage limits, so it
+  // still shows with the pane closed. Plain text in the app's own colors.
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.props.hasSurvey) return next(e)
+    const list = await read($, acts)
+    const t = await read($, turn)
+    const jb = await read($, job)
+    const lg = await read($, lang)
+    const qt = await read($, quota)
+    const base = await read($, limitBase)
+    const at = Math.max(await read($, now), Date.now())
+    const want = sceneFor(t, list, at)
+    const live = [...list].reverse().find(a => a.endedAt === null)
+    const five = qt.limits.find(l => l.kind === 'five_hour')?.percentUsed ?? null
+    const week = qt.limits.find(l => l.kind === 'seven_day')?.percentUsed ?? null
+    const fiveGain = gainText(five, base.five)
+    const { Box, Text } = $.ui.resolve(e)
+
+    return (
+      <Box flexDirection="row" gap={1}>
+        <Text>
+          {JOBS[jb].emoji} {SCENES[lg][want].what}
+        </Text>
+        {live && (
+          <Text dimColor wrap="truncate-end">
+            · {toolName(live.tool)}
+            {live.detail ? ` ${live.detail}` : ''}
+          </Text>
+        )}
+        {five !== null && <Text color="#E03131">♥ {Math.round(five)}%</Text>}
+        {fiveGain && <Text dimColor>{fiveGain}</Text>}
+        {week !== null && <Text color="#E0B84A">★ {Math.round(week)}%</Text>}
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {

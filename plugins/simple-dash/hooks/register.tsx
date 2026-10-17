@@ -23,7 +23,7 @@ import type { Lang } from './i18n'
 
 const PANE = 'simple-dash'
 const TITLE = 'Dashboard'
-const MAKER_URL = 'https://github.com/LetsBeLikeSophie'
+const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 const LOG_LINES = 6
 const BAR = 16
 
@@ -212,6 +212,49 @@ export const register: Register = on => {
   on('ui.render', { component: 'Spinner' }, ($, e, next) => {
     spinner = { word: e.props.message ?? e.props.word, at: Date.now() }
     return next(e)
+  })
+
+  // One line above the prompt: the status and the usage limits, so it still shows
+  // with the pane closed. Plain text in the app's own colors, the accent on the dot.
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.props.hasSurvey) return next(e)
+    const list = await read($, acts)
+    const t = await read($, turn)
+    const lg = await read($, lang)
+    const ac = await read($, accent)
+    const qt = await read($, quota)
+    const base = await read($, limitBase)
+    const at = Math.max(await read($, now), Date.now())
+    const status = statusOf(t, list, at)
+    const live = [...list].reverse().find(a => a.endedAt === null)
+    const five = pctOf(qt, 'five_hour')
+    const week = pctOf(qt, 'seven_day')
+    const fiveGain = gainText(five, base.five)
+    const { Box, Text } = $.ui.resolve(e)
+
+    return (
+      <Box flexDirection="row" gap={1}>
+        <Text>
+          <Text color={ac === 'mono' ? undefined : ACCENTS[ac]}>●</Text> {STATUS[lg][status]}
+        </Text>
+        {live && (
+          <Text dimColor wrap="truncate-end">
+            · {toolName(live.tool)}
+            {live.detail ? ` ${live.detail}` : ''}
+          </Text>
+        )}
+        {five !== null && (
+          <Text dimColor>
+            {UI[lg].five} {Math.round(five)}%{fiveGain ? ` ${fiveGain}` : ''}
+          </Text>
+        )}
+        {week !== null && (
+          <Text dimColor>
+            {UI[lg].week} {Math.round(week)}%
+          </Text>
+        )}
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {

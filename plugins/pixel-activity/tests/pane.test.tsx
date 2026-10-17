@@ -227,3 +227,16 @@ test('the maker credit is a button to the GitHub page', async ($, on) => {
   expect(await ui.find({ key: 'credit-link' })).toBeDefined()
   await ui.unmount()
 })
+
+test('a one-line band above the prompt says what is going on', async ($, on) => {
+  on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
+  await $.tool.call({ tool: 'Bash', command: 'echo hi' })
+  const ui = await $.ui.mount({
+    plugin: 'pixel-activity',
+    surface: 'desktop',
+    component: 'AbovePrompt',
+    props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
+  })
+  expect((await ui.findAll({ type: 'Text' })).length).toBeGreaterThan(0)
+  await ui.unmount()
+})
