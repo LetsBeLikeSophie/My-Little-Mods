@@ -20,7 +20,7 @@ import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i1
 import type { Lang } from './i18n'
 import { alert } from './alerts'
 import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
-import { J, chipsSvg, greetingSvg, nowSvg, statsSvg } from './journal'
+import { J, bandSvg, chipsSvg, greetingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
 const TITLE = 'Journal'
@@ -257,6 +257,14 @@ export const register: Register = on => {
     const five = pctOf(qt, 'five_hour')
     const week = pctOf(qt, 'seven_day')
     const fiveGain = gainText(five, base.five)
+    if (e.surface === 'desktop') {
+    const limits = [five === null ? '' : `${UI[lg].five} ${Math.round(five)}%${fiveGain ? ` ${fiveGain}` : ''}`, week === null ? '' : `${UI[lg].week} ${Math.round(week)}%`]
+      .filter(Boolean)
+      .join('  ')
+    const detail = live ? `${toolName(live.tool)}${live.detail ? ` ${live.detail}` : ''}` : ''
+      const { Svg } = $.ui.resolve(e)
+      return <Svg source={bandSvg({ status, what: STATUS[lg][status], detail, limits })} alt={[STATUS[lg][status], detail, limits].filter(Boolean).join(' · ')} />
+    }
     const { Box, Text } = $.ui.resolve(e)
 
     return (

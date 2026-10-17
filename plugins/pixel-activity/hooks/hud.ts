@@ -72,3 +72,39 @@ export function hudSvg(sections: readonly HudSection[], font: string, colors: { 
   const H = y + 2
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 4}" height="${H * 4}" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${style}${body}</svg>`
 }
+
+export type BandData = { emoji: string; what: string; detail: string; five: number | null; fiveGain: string; week: number | null }
+
+/** The line above the prompt as a tiny quest bar: dark slate, gold rim, pixel type. */
+export function bandSvg(d: BandData, font: string): string {
+  const W = 360
+  const H = 22
+  const style = `<style>${font ? `@font-face{font-family:px;src:url(${font}) format('woff')}` : ''}text{font-family:px,'Galmuri11',monospace}</style>`
+  const right =
+    (d.five === null ? '' : `${Math.round(d.five)}%${d.fiveGain ? ` ${d.fiveGain}` : ''}`) + (d.week === null ? '' : `   ${Math.round(d.week)}%`)
+  const rightW = right.length * 6.2 + (d.five === null ? 0 : 10) + (d.week === null ? 0 : 10)
+  const left = `${d.what}${d.detail ? ` · ${d.detail}` : ''}`
+  const room = W - 30 - rightW - 18
+  let cut = left
+  while (cut.length > 1 && [...cut].reduce((n, ch) => n + (/[\uac00-\ud7a3]/.test(ch) ? 10 : 6.2), 0) > room) cut = cut.slice(0, -1)
+  if (cut !== left) cut = `${cut.slice(0, -1)}…`
+  let body = `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="4" fill="#1C1A24" stroke="#E0B84A"/>`
+  body += `<text x="8" y="15" font-size="11">${esc(d.emoji)}</text>`
+  body += `<text x="24" y="15" font-size="10" fill="#F2E8D5">${esc(cut)}</text>`
+  let x = W - 8 - rightW
+  if (d.five !== null) {
+    body += icon('heart', x, 8, '#E03131')
+    x += 9
+    body += `<text x="${x}" y="15" font-size="10" fill="#F2E8D5">${Math.round(d.five)}%</text>`
+    x += `${Math.round(d.five)}%`.length * 6.2 + 6
+    if (d.fiveGain) {
+      body += `<text x="${x}" y="15" font-size="9" fill="#FF9A9A">${esc(d.fiveGain)}</text>`
+      x += d.fiveGain.length * 5.6 + 6
+    }
+  }
+  if (d.week !== null) {
+    body += icon('star', x + 4, 8, '#E0B84A')
+    body += `<text x="${x + 13}" y="15" font-size="10" fill="#F2E8D5">${Math.round(d.week)}%</text>`
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${style}${body}</svg>`
+}

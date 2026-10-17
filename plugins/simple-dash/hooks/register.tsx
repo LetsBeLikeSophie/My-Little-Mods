@@ -22,7 +22,7 @@ import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilTex
 import type { Lang } from './i18n'
 import { alert } from './alerts'
 import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
-import { ringsSvg, statusSvg, timeSvg } from './calm'
+import { bandSvg, ringsSvg, statusSvg, timeSvg } from './calm'
 import type { Palette } from './calm'
 
 const PANE = 'simple-dash'
@@ -265,6 +265,18 @@ export const register: Register = on => {
     const five = pctOf(qt, 'five_hour')
     const week = pctOf(qt, 'seven_day')
     const fiveGain = gainText(five, base.five)
+    if (e.surface === 'desktop') {
+    const limits = [five === null ? '' : `${UI[lg].five} ${Math.round(five)}%${fiveGain ? ` ${fiveGain}` : ''}`, week === null ? '' : `${UI[lg].week} ${Math.round(week)}%`]
+      .filter(Boolean)
+      .join('  ')
+    const detail = live ? `${toolName(live.tool)}${live.detail ? ` ${live.detail}` : ''}` : ''
+      const th = await read($, theme)
+      const { CARD, FG, DIM, EMPTY } = THEMES[th]
+      const A = ACCENTS[ac]
+      const pal: Palette = { card: CARD, ink: FG, soft: DIM, track: EMPTY, accent: A, glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55), rim: A }
+      const { Svg } = $.ui.resolve(e)
+      return <Svg source={bandSvg({ what: STATUS[lg][status], detail, limits }, pal, status === 'approval')} alt={[STATUS[lg][status], detail, limits].filter(Boolean).join(' · ')} />
+    }
     const { Box, Text } = $.ui.resolve(e)
 
     return (

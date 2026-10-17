@@ -4,7 +4,7 @@ import type { EngineInterface, Register, SessionRateLimit, Timer } from 'claude-
 import type { Act, ActKind, Job, Output, Species, Turn } from '../types'
 import { JOBS, JOB_IDS, SPECIES, SPECIES_IDS, barSvg, campSvg, skyOf, thumbSvg, walkSeconds } from './camp'
 import { busyMs, statsSvg } from './stats'
-import { gainText, hudSvg } from './hud'
+import { bandSvg, gainText, hudSvg } from './hud'
 import { alert } from './alerts'
 import { DOC_EXT, artifactIn, baseName, detailOf, isCheckCommand, kindOf, nextPlan, pctOf, toolName } from './core'
 import { AlertsButton, Credit, LogLines, OpenButton } from './parts'
@@ -397,12 +397,23 @@ export const register: Register = on => {
     const five = qt.limits.find(l => l.kind === 'five_hour')?.percentUsed ?? null
     const week = qt.limits.find(l => l.kind === 'seven_day')?.percentUsed ?? null
     const fiveGain = gainText(five, base.five)
+    const what = SCENES[lg][want].what
+    const detail = live ? `${toolName(live.tool)}${live.detail ? ` ${live.detail}` : ''}` : ''
+    if (e.surface === 'desktop') {
+      const { Svg } = $.ui.resolve(e)
+      return (
+        <Svg
+          source={bandSvg({ emoji: JOBS[jb].emoji, what, detail, five, fiveGain, week }, PIXEL_FONT)}
+          alt={[what, detail, five === null ? '' : `♥ ${Math.round(five)}%`, week === null ? '' : `★ ${Math.round(week)}%`].filter(Boolean).join(' · ')}
+        />
+      )
+    }
     const { Box, Text } = $.ui.resolve(e)
 
     return (
       <Box flexDirection="row" gap={1}>
         <Text>
-          {JOBS[jb].emoji} {SCENES[lg][want].what}
+          {JOBS[jb].emoji} {what}
         </Text>
         {live && (
           <Text dimColor wrap="truncate-end">
