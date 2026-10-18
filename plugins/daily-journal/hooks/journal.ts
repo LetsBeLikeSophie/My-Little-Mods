@@ -5,9 +5,6 @@ import type { Status } from './core'
 
 const FONT = "'Noto Sans KR','Segoe UI Variable Display','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif"
 const W = 320
-// Cards span the full width, edge to edge like the app's own boxes, with this corner and inset.
-const R = 12
-const PAD = 16
 
 export const J = {
   cream: '#F1EEE9',
@@ -66,156 +63,44 @@ function clip(t: string, size: number, room: number): string {
   return `${out}…`
 }
 
+/** The largest size up to `max` (and no smaller than 14) at which `t` fits in `room`. */
+function fit(t: string, max: number, room: number): number {
+  const w = widthOf(t, max)
+  return w <= room ? max : Math.max(14, Math.floor((max * room) / w))
+}
+
 function text(x: number, y: number, size: number, weight: number, fill: string, t: string, anchor = 'start'): string {
   return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${FONT}">${esc(t)}</text>`
 }
 
-/** A card's title, as a thin strip of its own. */
-export function headingSvg(title: string, pp: Paper = PAPERS.light, dot = ''): string {
-  // a small colored dot before the title: the card's one touch of color
-  return dot ? svg(22, `<circle cx="5" cy="11" r="4.5" fill="${dot}"/>` + text(16, 16, 15, 700, pp.ink, title)) : svg(22, text(0, 16, 15, 700, pp.ink, title))
-}
 
 function svg(h: number, body: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${h * 2}" viewBox="0 0 ${W} ${h}">${body}</svg>`
 }
 
 /** Greeting, the date, and a round avatar with the person's initial. */
-export function greetingSvg(hello: string, date: string, initial: string, pp: Paper = PAPERS.light): string {
-  const H = 72
+export function greetingSvg(hello: string, who: string, date: string, initial: string, pp: Paper = PAPERS.light): string {
+  // The hello on its own small line and the name big beneath it, shrunk to fit, so neither is cut.
+  const H = 78
+  const room = W - 70
+  const size = fit(who, 24, room)
   return svg(
     H,
-    text(0, 34, 24, 700, pp.ink, clip(hello, 24, W - 80)) +
-      text(0, 58, 13, 400, pp.soft, date) +
+    text(0, 16, 13, 600, pp.soft, hello) +
+      (who ? text(0, 44, size, 800, pp.ink, clip(who, size, room)) : '') +
+      text(0, who ? 66 : 44, 12, 400, pp.soft, date) +
       `<defs><linearGradient id="av" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB15C"/><stop offset="1" stop-color="${J.orange}"/></linearGradient></defs>` +
-      `<circle cx="${W - 24}" cy="34" r="24" fill="url(#av)"/>` +
-      text(W - 24, 42, 20, 700, '#FFFFFF', initial, 'middle'),
+      `<circle cx="${W - 24}" cy="36" r="24" fill="url(#av)"/>` +
+      text(W - 24, 44, 20, 700, '#FFFFFF', initial, 'middle'),
   )
 }
 
-/** A little face for each mood: a sun at work, a cloud thinking, a moon resting … */
-function mascot(status: Status, cx: number, cy: number): string {
-  const face = (y: number, happy: boolean) =>
-    `<circle cx="${cx - 7}" cy="${y}" r="2.2" fill="${J.ink}"/><circle cx="${cx + 7}" cy="${y}" r="2.2" fill="${J.ink}"/>` +
-    (happy
-      ? `<path d="M${cx - 5} ${y + 6} Q${cx} ${y + 10} ${cx + 5} ${y + 6}" stroke="${J.ink}" stroke-width="2" fill="none" stroke-linecap="round"/>`
-      : `<path d="M${cx - 4} ${y + 9} Q${cx} ${y + 6} ${cx + 4} ${y + 9}" stroke="${J.ink}" stroke-width="2" fill="none" stroke-linecap="round"/>`) +
-    `<circle cx="${cx - 12}" cy="${y + 5}" r="3" fill="#FF8A80" opacity=".55"/><circle cx="${cx + 12}" cy="${y + 5}" r="3" fill="#FF8A80" opacity=".55"/>`
-  if (status === 'approval') {
-    // waving for attention: the sun raises a hand, a little "!" beside it
-    return (
-      `<circle cx="${cx}" cy="${cy}" r="24" fill="${J.sunDeep}"/>` +
-      face(cy - 2, true) +
-      `<path d="M${cx + 20} ${cy - 6} Q${cx + 30} ${cy - 18} ${cx + 30} ${cy - 30}" stroke="${J.sunDeep}" stroke-width="6" fill="none" stroke-linecap="round"/>` +
-      `<circle cx="${cx + 30}" cy="${cy - 34}" r="7" fill="${J.sunDeep}"/>` +
-      `<path d="M${cx + 40} ${cy - 44} q4 4 0 10 M${cx + 22} ${cy - 46} q-4 4 0 10" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>` +
-      `<rect x="${cx - 40}" y="${cy - 46}" width="22" height="22" rx="11" fill="#FFFFFF"/>` +
-      text(cx - 29, cy - 29, 15, 800, '#E0533D', '!', 'middle')
-    )
-  }
-  if (status === 'waiting' || status === 'done') {
-    // resting: a crescent moon
-    return (
-      `<circle cx="${cx}" cy="${cy}" r="24" fill="#FFE7A3"/>` +
-      `<circle cx="${cx + 12}" cy="${cy - 9}" r="20" fill="${J.sun}"/>` +
-      face(cy + 2, true) +
-      (status === 'done' ? `<path d="M${cx + 26} ${cy - 22} l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1 z" fill="#FFFFFF"/>` : '')
-    )
-  }
-  if (status === 'thinking' || status === 'error') {
-    const rain = status === 'error'
-      ? [0, 1, 2].map(i => `<path d="M${cx - 10 + i * 10} ${cy + 22} v8" stroke="#5B8DEF" stroke-width="3" stroke-linecap="round"/>`).join('')
-      : `<circle cx="${cx + 26}" cy="${cy - 20}" r="3" fill="#FFFFFF"/><circle cx="${cx + 33}" cy="${cy - 28}" r="4.5" fill="#FFFFFF"/>`
-    return (
-      `<path d="M${cx - 24} ${cy + 16} q-12 0 -12 -12 q0 -12 14 -12 q2 -14 20 -14 q16 0 20 12 q16 -2 18 12 q2 14 -12 14 z" fill="#FFFFFF"/>` +
-      face(cy, !rain) +
-      rain
-    )
-  }
-  // at work: a sun with rays
-  const rays = Array.from({ length: 8 }, (_, i) => {
-    const a = (i * Math.PI) / 4
-    const x0 = cx + Math.cos(a) * 30
-    const y0 = cy + Math.sin(a) * 30
-    const x1 = cx + Math.cos(a) * 38
-    const y1 = cy + Math.sin(a) * 38
-    return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${J.sunDeep}" stroke-width="3.5" stroke-linecap="round"/>`
-  }).join('')
-  return rays + `<circle cx="${cx}" cy="${cy}" r="24" fill="${J.sunDeep}"/>` + face(cy - 2, true)
-}
 
-export type NowCard = { status: Status; title: string; detail: string; tag: string; label: string }
 
-/** The sunny card: what is happening now, with a mascot on the right. */
-export function nowSvg(d: NowCard): string {
-  const H = 150
-  const room = W - 130
-  return svg(
-    H,
-    `<rect x="0" y="0" width="${W}" height="${H}" rx="${R}" fill="${J.sun}"/>` +
-      // soft hills along the bottom
-      `<path d="M0 ${H - 34} Q70 ${H - 58} 140 ${H - 38} T${W} ${H - 40} V${H - R} Q${W} ${H} ${W - R} ${H} H${R} Q0 ${H} 0 ${H - R} Z" fill="#F5B53A" opacity=".55"/>` +
-      text(PAD, 34, 12.5, 600, '#7A5A12', d.label) +
-      text(PAD, 66, 22, 700, J.ink, clip(d.title, 22, room)) +
-      (d.detail ? text(PAD, 90, 12.5, 400, '#5E4A1E', clip(d.detail, 12.5, room)) : '') +
-      (d.tag
-        ? `<rect x="${PAD}" y="${H - 38}" width="${Math.max(54, widthOf(d.tag, 12) + 22)}" height="24" rx="12" fill="#FFFFFF"/>` +
-          text(PAD + 11, H - 21, 12, 600, J.ink, d.tag)
-        : '') +
-      mascot(d.status, W - 56, 62),
-  )
-}
 
-export type Chip = { title: string; value: string; tag: string; note: string; tone: 'pink' | 'lilac' | 'mint' }
 
-/** The usage limits as three pastel cards, each with a white pill tag. */
-export function chipsSvg(chips: readonly Chip[], pp: Paper = PAPERS.light): string {
-  const H = 104
-  const gap = 8
-  const w = (W - gap * (chips.length - 1)) / chips.length
-  const tones = { pink: [pp.pink, J.pinkInk], lilac: [pp.lilac, J.lilacInk], mint: [pp.mint, J.mintInk] } as const
-  let body = ''
-  chips.forEach((c, i) => {
-    const x = i * (w + gap)
-    const [bg, ink] = tones[c.tone]
-    body += `<rect x="${x}" y="0" width="${w}" height="${H}" rx="${R}" fill="${bg}"/>`
-    body += text(x + 14, 26, 12.5, 600, pp.ink, c.title)
-    body += text(x + 14, 56, 26, 700, pp.ink, c.value)
-    if (c.tag) {
-      const tw = widthOf(c.tag, 11) + 16
-      body += `<rect x="${x + 12}" y="${H - 34}" width="${tw}" height="20" rx="10" fill="${pp.tagBg}"/>` + text(x + 20, H - 20, 11, 700, ink, c.tag)
-    } else if (c.note) {
-      body += text(x + 14, H - 20, 11, 400, pp.soft, clip(c.note, 11, w - 24))
-    }
-  })
-  return svg(H, body)
-}
 
-export type Pill = { label: string; pct: number }
 
-/** A big number with its caption, beside up to four rounded pill bars. */
-export function statsSvg(big: string, caption: string, title: string, pills: readonly Pill[], empty = '', pp: Paper = PAPERS.light): string {
-  const H = 206
-  let body = `<rect x="0" y="0" width="${W}" height="${H}" rx="${R}" fill="${pp.card}"/>`
-  body += text(PAD, 36, 15, 700, pp.ink, title)
-  body += text(PAD, 104, 48, 800, pp.ink, big)
-  body += text(PAD, 128, 12, 400, pp.soft, caption)
-  const n = Math.max(1, pills.length)
-  const area = W - 150 - 20
-  const pw = Math.min(30, (area - (n - 1) * 8) / n)
-  const top = 30
-  const bottom = 172
-  pills.forEach((p, i) => {
-    const x = 150 + i * (pw + 8)
-    const h = Math.max(pw, ((bottom - top) * p.pct) / 100)
-    body += `<rect x="${x}" y="${top}" width="${pw}" height="${bottom - top}" rx="${pw / 2}" fill="${pp.line}"/>`
-    body += `<rect x="${x}" y="${bottom - h}" width="${pw}" height="${h}" rx="${pw / 2}" fill="${J.bars[i % J.bars.length]}"/>`
-    body += text(x + pw / 2, bottom - 10, 10, 700, '#FFFFFF', `${p.pct}%`, 'middle')
-    body += text(x + pw / 2, bottom + 20, 11, 400, pp.ink, clip(p.label, 11, pw + 14), 'middle')
-  })
-  if (pills.length === 0) body += text(150, 104, 12, 400, pp.soft, clip(empty, 12, W - 170))
-  return svg(H, body)
-}
 
 export type BandData = { status: Status; what: string; detail: string; limits: string }
 
@@ -241,4 +126,136 @@ export function bandSvg(d: BandData): string {
     text(BW - 3 - rightW / 2, 13.8, 10.5, 600, J.ink, d.limits, 'middle') +
     `</svg>`
   )
+}
+
+// ─── The pictures inside the cards. Each is drawn with no background or inset
+// of its own: the app's card around it gives every card the same padding. ───
+
+/** A tiny flat icon before a card title: filled shapes only, no outlines. */
+export type IconKind = 'star' | 'note' | 'flower' | 'clock'
+
+function icon(kind: IconKind, x: number, y: number): string {
+  if (kind === 'star') {
+    const pts = Array.from({ length: 10 }, (_, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5
+      const r = i % 2 ? 3 : 7
+      return `${(x + Math.cos(a) * r).toFixed(1)},${(y + Math.sin(a) * r).toFixed(1)}`
+    }).join(' ')
+    return `<polygon points="${pts}" fill="${J.sunDeep}"/>`
+  }
+  if (kind === 'note') {
+    // a little notebook: a pink cover with a paler page
+    return `<rect x="${x - 6}" y="${y - 7}" width="12" height="14" rx="2.5" fill="#F29BA8"/><rect x="${x - 2}" y="${y - 7}" width="8" height="14" rx="2" fill="#F6C3CB"/>`
+  }
+  if (kind === 'clock') {
+    // a lilac clock face with two white hands
+    return `<circle cx="${x}" cy="${y}" r="7" fill="#B3A6F2"/><rect x="${x - 0.9}" y="${y - 4.5}" width="1.8" height="5.2" rx=".9" fill="#FFFFFF"/><rect x="${x - 0.9}" y="${y - 0.9}" width="4.2" height="1.8" rx=".9" fill="#FFFFFF"/>`
+  }
+  // a five-petal flower
+  let f = ''
+  for (let i = 0; i < 5; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5
+    f += `<circle cx="${(x + Math.cos(a) * 4).toFixed(1)}" cy="${(y + Math.sin(a) * 4).toFixed(1)}" r="3.4" fill="#8CC9A0"/>`
+  }
+  return f + `<circle cx="${x}" cy="${y}" r="2.6" fill="${J.sun}"/>`
+}
+
+/** A card's title, with its little icon before it. */
+export function headingSvg(title: string, pp: Paper = PAPERS.light, kind?: IconKind): string {
+  return kind ? svg(22, icon(kind, 7, 11) + text(20, 16, 15, 700, pp.ink, title)) : svg(22, text(0, 16, 15, 700, pp.ink, title))
+}
+
+/** The sky of the hour: dawn, day, sunset or night. */
+export type SkyKind = 'dawn' | 'day' | 'sunset' | 'night'
+export type Sky = { kind: SkyKind; bg: string; ink: string; soft: string; tagBg: string }
+
+export function skyOf(hour: number): Sky {
+  if (hour >= 5 && hour < 8) return { kind: 'dawn', bg: '#F6D9E4', ink: '#3A2A3E', soft: '#7C6378', tagBg: '#FFFFFF' }
+  if (hour >= 8 && hour < 17) return { kind: 'day', bg: J.sun, ink: J.ink, soft: '#6E5520', tagBg: '#FFFFFF' }
+  if (hour >= 17 && hour < 20) return { kind: 'sunset', bg: '#FFB27A', ink: '#3B2316', soft: '#7A4A2E', tagBg: '#FFF1E6' }
+  return { kind: 'night', bg: '#2E3566', ink: '#F3F0FF', soft: '#B7B9DE', tagBg: '#454C85' }
+}
+
+/** A calm little face: two dots and a smile. */
+function face(cx: number, cy: number, c: string): string {
+  return (
+    `<circle cx="${cx - 5}" cy="${cy}" r="1.8" fill="${c}"/><circle cx="${cx + 5}" cy="${cy}" r="1.8" fill="${c}"/>` +
+    `<path d="M${cx - 4} ${cy + 5} Q${cx} ${cy + 8} ${cx + 4} ${cy + 5}" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+  )
+}
+
+/** The sun or moon of the hour, flat and simple. */
+function skyBody(kind: SkyKind, cx: number, cy: number): string {
+  if (kind === 'night') {
+    const stars = ([[-28, -14, 1.6], [22, -20, 1.2], [-30, 12, 1.1], [26, 14, 1.5]] as const)
+      .map(([dx, dy, r]) => `<circle cx="${cx + dx}" cy="${cy + dy}" r="${r}" fill="#FFFFFF" opacity=".8"/>`)
+      .join('')
+    // a crescent: the moon with the night sky bitten out of it, the face on what is left
+    return stars + `<circle cx="${cx}" cy="${cy}" r="17" fill="#FFE7A3"/><circle cx="${cx + 9}" cy="${cy - 7}" r="14" fill="#2E3566"/>` + face(cx - 6, cy + 3, '#2B2620')
+  }
+  if (kind === 'dawn' || kind === 'sunset') {
+    // half a sun resting on the horizon
+    const c = kind === 'dawn' ? '#FF9EB5' : '#F2703A'
+    const hy = cy + 10
+    return (
+      `<path d="M${cx - 19} ${hy} A19 19 0 0 1 ${cx + 19} ${hy} Z" fill="${c}"/>` +
+      `<rect x="${cx - 30}" y="${hy + 2}" width="60" height="3" rx="1.5" fill="${c}" opacity=".55"/>` +
+      face(cx, hy - 9, '#3B2316')
+    )
+  }
+  const rays = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * Math.PI) / 4
+    return `<circle cx="${(cx + Math.cos(a) * 24).toFixed(1)}" cy="${(cy + Math.sin(a) * 24).toFixed(1)}" r="2.6" fill="${J.sunDeep}"/>`
+  }).join('')
+  return rays + `<circle cx="${cx}" cy="${cy}" r="17" fill="${J.sunDeep}"/>` + face(cx, cy - 2, '#2B2620')
+}
+
+export type NowCard = { status: Status; title: string; detail: string; tag: string; label: string }
+
+/** What is happening now, on the sky of the hour; the sun or moon at the right. */
+export function nowSvg(d: NowCard, sky: Sky): string {
+  const H = 78
+  const room = W - 76
+  const tagW = Math.max(48, widthOf(d.tag, 11) + 18)
+  const ask =
+    d.status === 'approval'
+      ? `<circle cx="${W - 12}" cy="10" r="9" fill="#E0533D"/>` + text(W - 12, 14.5, 12, 800, '#FFFFFF', '!', 'middle')
+      : ''
+  return svg(
+    H,
+    text(0, 13, 12, 600, sky.soft, d.label) +
+      text(0, 38, fit(d.title, 21, room), 700, sky.ink, clip(d.title, fit(d.title, 21, room), room)) +
+      (d.detail ? text(0, 58, 12, 400, sky.soft, clip(d.detail, 12, room)) : '') +
+      (d.tag
+        ? `<rect x="${W - tagW}" y="${H - 20}" width="${tagW}" height="20" rx="10" fill="${sky.tagBg}"/>` +
+          text(W - tagW / 2, H - 6, 11, 600, sky.ink, d.tag, 'middle')
+        : '') +
+      skyBody(sky.kind, W - 34, 30) +
+      ask,
+  )
+}
+
+export type Pill = { label: string; pct: number }
+
+/** A big number with its caption, beside up to four rounded pill bars. */
+export function statsSvg(big: string, caption: string, pills: readonly Pill[], empty = '', pp: Paper = PAPERS.light): string {
+  const H = 150
+  let body = text(0, 58, 46, 800, pp.ink, big)
+  body += text(0, 82, 12, 400, pp.soft, caption)
+  const n = Math.max(1, pills.length)
+  const left = 136
+  const area = W - left
+  const pw = Math.min(30, (area - (n - 1) * 8) / n)
+  const top = 4
+  const bottom = 124
+  pills.forEach((p, i) => {
+    const x = left + i * (pw + 8)
+    const h = Math.max(pw, ((bottom - top) * p.pct) / 100)
+    body += `<rect x="${x}" y="${top}" width="${pw}" height="${bottom - top}" rx="${pw / 2}" fill="${pp.line}"/>`
+    body += `<rect x="${x}" y="${bottom - h}" width="${pw}" height="${h}" rx="${pw / 2}" fill="${J.bars[i % J.bars.length]}"/>`
+    body += text(x + pw / 2, bottom - 10, 10, 700, '#FFFFFF', `${p.pct}%`, 'middle')
+    body += text(x + pw / 2, bottom + 20, 11, 400, pp.ink, clip(p.label, 11, pw + 14), 'middle')
+  })
+  if (pills.length === 0) body += text(left, 62, 12, 400, pp.soft, clip(empty, 12, W - left))
+  return svg(H, body)
 }

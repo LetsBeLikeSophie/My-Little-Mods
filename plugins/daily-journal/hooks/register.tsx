@@ -19,7 +19,8 @@ import {
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
-import { J, PAPERS, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
+import { J, PAPERS, bandSvg, greetingSvg, headingSvg, nowSvg, skyOf, statsSvg } from './journal'
+import type { IconKind } from './journal'
 
 const PANE = 'daily-journal'
 const TITLE = 'Journal'
@@ -359,50 +360,94 @@ export const register: Register = on => {
     const PASTELS = [pp.pink, pp.lilac, pp.mint] as const
     // Every card alike: white, the same small corner and the same inset on all four sides; the title in serif.
     // Every card alike: white paper, the same shape and inset; a small colored dot by the title.
-    const card = (key: string, title: string, children: RenderChildren, dot = '') => (
+    const card = (key: string, title: string, children: RenderChildren, kind?: IconKind) => (
       <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
-        {title && <Svg source={headingSvg(title, pp, dot)} alt={title} />}
+        {title && <Svg source={headingSvg(title, pp, kind)} alt={title} />}
         {children}
       </Box>
     )
-    const chip = (kind: 'five_hour' | 'seven_day', tone: 'pink' | 'lilac') => {
+    const chip = (kind: 'five_hour' | 'seven_day', bg: string, ink: string) => {
       const q = qt.limits.find(l => l.kind === kind)
       const reset = q?.resetsAt ? Date.parse(q.resetsAt) - at : NaN
       const pct = q ? q.percentUsed : null
       return {
+        key: kind,
         title: kind === 'five_hour' ? L.five : L.week,
         value: pct === null ? '–' : `${Math.round(pct)}%`,
         tag: gainText(pct, kind === 'five_hour' ? base.five : base.week),
         note: Number.isFinite(reset) ? `↻ ${untilText(lg, reset)}` : '',
-        tone,
+        bg,
+        ink,
       }
     }
+    const chips = [
+      chip('five_hour', pp.pink, J.pinkInk),
+      chip('seven_day', pp.lilac, J.lilacInk),
+      {
+        key: 'session',
+        title: L.session,
+        value: qt.contextPct === null ? '–' : `${Math.round(qt.contextPct)}%`,
+        tag: '',
+        note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote,
+        bg: pp.mint,
+        ink: J.mintInk,
+      },
+    ]
+    const sky = skyOf(new Date(at).getHours())
     const mainActs = list.filter(a => !a.isSub).length
     const pills = timeRows.slice(0, 4).map(([k, ms]) => ({ label: TIME_LABELS[lg][k] ?? k, pct: Math.round((ms / timeTotal) * 100) }))
     const isResting = status === 'waiting' || status === 'done'
 
     return (
       <Box flexDirection="column" gap="sm" padding="md" backgroundColor={pp.cream} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
-        <Svg source={greetingSvg(L.hello(who), dateLine(lg, at), (who[0] ?? '☺').toUpperCase(), pp)} alt={L.hello(who)} />
-        <Svg
-          source={nowSvg({
-            status,
-            label: status === 'approval' ? L.askNow : t.isWorking ? L.now : L.last,
-            title: STATUS[lg][status],
-            detail: sub || (isResting ? L.restLine : ''),
-            tag: t.startedAt ? (t.isWorking ? L.tagTyping(seconds(lg, elapsed)) : seconds(lg, elapsed)) : '',
-          })}
-          alt={`${STATUS[lg][status]} ${sub}`}
-        />
-        <Svg
-          source={chipsSvg([
-            chip('five_hour', 'pink'),
-            chip('seven_day', 'lilac'),
-            { title: L.session, value: qt.contextPct === null ? '–' : `${Math.round(qt.contextPct)}%`, tag: '', note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote, tone: 'mint' },
-          ], pp)}
-          alt={L.limits}
-        />
-        <Svg source={statsSvg(String(mainActs), L.statsCaption, L.statsTitle, pills, L.timeEmpty, pp)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />
+        <Svg source={greetingSvg(who ? L.greet : L.hello(''), who, dateLine(lg, at), (who[0] ?? '☺').toUpperCase(), pp)} alt={L.hello(who)} />
+
+        {/* What is happening now, on the sky of the hour. */}
+        <Box key="now" flexDirection="column" padding="md" backgroundColor={sky.bg} borderStyle="round" borderColor={sky.bg}>
+          <Svg
+            source={nowSvg(
+              {
+                status,
+                label: status === 'approval' ? L.askNow : t.isWorking ? L.now : L.last,
+                title: STATUS[lg][status],
+                detail: sub || (isResting ? L.restLine : ''),
+                tag: t.startedAt ? (t.isWorking ? L.tagTyping(seconds(lg, elapsed)) : seconds(lg, elapsed)) : '',
+              },
+              sky,
+            )}
+            alt={`${STATUS[lg][status]} ${sub}`}
+          />
+        </Box>
+
+        {/* The usage limits: three pastel cards, the same inset as every other card. */}
+        <Box key="limits" flexDirection="row" gap="sm">
+          {chips.map(c => (
+            <Box key={`chip-${c.key}`} flexDirection="column" gap="xs" flexGrow={1} flexShrink={1} width="33%" padding="md" backgroundColor={c.bg} borderStyle="round" borderColor={c.bg}>
+              <Text size="footnote" weight="semibold" color={pp.ink}>
+                {c.title}
+              </Text>
+              <Text size="title" weight="bold" color={pp.ink}>
+                {c.value}
+              </Text>
+              {c.tag ? (
+                <Text size="caption" weight="bold" color={c.ink}>
+                  {c.tag}
+                </Text>
+              ) : (
+                <Text size="caption" color={pp.soft} wrap="truncate-end">
+                  {c.note || ' '}
+                </Text>
+              )}
+            </Box>
+          ))}
+        </Box>
+
+        {card(
+          'stats',
+          L.statsTitle,
+          <Svg source={statsSvg(String(mainActs), L.statsCaption, pills, L.timeEmpty, pp)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />,
+          'clock',
+        )}
 
         {card(
           'results',
@@ -438,14 +483,14 @@ export const register: Register = on => {
               ))}
             </Box>
           ),
-          J.pinkInk,
+          'star',
         )}
 
         {card(
           'log',
           L.log,
           LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: pp.ink, soft: pp.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
-          J.sun,
+          'note',
         )}
 
         {card(
@@ -454,7 +499,7 @@ export const register: Register = on => {
           <Text size="footnote" color={pp.ink}>
             {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
           </Text>,
-          J.mintInk,
+          'flower',
         )}
 
         {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}
