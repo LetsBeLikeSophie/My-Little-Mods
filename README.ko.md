@@ -45,6 +45,24 @@ claude plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
 
 `/plugin`이 안 되는 Claude 데스크톱 앱에서는: 입력창 옆 **+** → **Plugins → Add marketplace**에 `LetsBeLikeSophie/My-Little-Mods`를 넣고 **Add plugin**.
 
+## 삭제
+
+입력창에서 (`rpg` 자리에 `calm`이나 `day`):
+
+```
+/plugin uninstall rpg@my-little-mods
+```
+
+셸에서:
+
+```bash
+claude plugin uninstall rpg@my-little-mods
+```
+
+마켓플레이스 등록까지 지우려면 `/plugin marketplace remove my-little-mods`. 데스크톱 앱에서는 입력창 옆 **+** → **Plugins**에서 지워요.
+
+마지막에 연 모드를 적어두는 작은 파일 `~/.claude/my-little-mods.json`이 남을 수 있어요. 지워도 괜찮아요.
+
 ## 쓰는 법
 
 - 모드는 명령어로 열려요. 새 세션에서는 마지막에 연 모드 하나만 다시 열려요.

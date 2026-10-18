@@ -45,6 +45,24 @@ claude plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
 
 In the Claude desktop app, where `/plugin` does not run: click **+** next to the prompt box, then **Plugins → Add marketplace** with `LetsBeLikeSophie/My-Little-Mods`, then **Add plugin**.
 
+## Uninstall
+
+At the prompt (swap `rpg` for `calm` or `day`):
+
+```
+/plugin uninstall rpg@my-little-mods
+```
+
+From a shell:
+
+```bash
+claude plugin uninstall rpg@my-little-mods
+```
+
+To drop the marketplace too: `/plugin marketplace remove my-little-mods`. In the desktop app: **+** next to the prompt box → **Plugins**.
+
+A tiny file, `~/.claude/my-little-mods.json` (which mod you opened last), may stay behind; delete it if you like.
+
 ## Using them
 
 - A mod opens with its command. A new session reopens only the mod you opened last.
