@@ -40,6 +40,7 @@ declare module 'claude-code' {
       logOpen: string
       approval: { id: string; tool: string; since: number } | null
       alerts: boolean
+      theme: 'dark' | 'light'
       life: { quests: number; slain: number; actions: number }
       now: number
     }

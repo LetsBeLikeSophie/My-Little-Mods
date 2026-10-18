@@ -105,3 +105,12 @@ test('a small mark joins the footer mode labels', async ($, on) => {
   expect(modes[1]).toMatch(/일지|journal/)
   await ui.unmount()
 })
+
+test('the theme button flips between light and dark', async ($, on) => {
+  mock.store(on)
+  const ui = await $.ui.mount({ plugin: 'daily-journal', surface: 'desktop', ...PANE })
+  expect(await ui.find({ key: 'toggle-theme', text: /☾/ })).toBeDefined()
+  await ui.press({ key: 'toggle-theme' })
+  expect(await ui.find({ key: 'toggle-theme', text: /☀/ })).toBeDefined()
+  await ui.unmount()
+})

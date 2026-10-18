@@ -19,7 +19,7 @@ import {
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
-import { J, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
+import { J, PAPERS, bandSvg, chipsSvg, greetingSvg, headingSvg, nowSvg, statsSvg } from './journal'
 
 const PANE = 'daily-journal'
 const TITLE = 'Journal'
@@ -37,6 +37,7 @@ const logOpen = atom({ plugin: 'daily-journal', key: 'logOpen' } as const, '')
 const now = atom({ plugin: 'daily-journal', key: 'now' } as const, 0)
 const approval = atom({ plugin: 'daily-journal', key: 'approval' } as const, null)
 const alerts = atom({ plugin: 'daily-journal', key: 'alerts' } as const, true)
+const theme = atom({ plugin: 'daily-journal', key: 'theme' } as const, 'light')
 const life = atom({ plugin: 'daily-journal', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
 
 type Life = { quests: number; slain: number; actions: number }
@@ -95,6 +96,8 @@ export const register: Register = on => {
     void guessName($).then(n => update($, name, () => n)).catch(() => undefined)
     const savedAlerts = await $.store.get('alerts')
     if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
+    const savedTheme = await $.store.get('theme')
+    if (savedTheme === 'dark' || savedTheme === 'light') await update($, theme, () => savedTheme)
     const savedLife = (await $.store.get('life')) as Life | undefined
     if (savedLife && typeof savedLife.quests === 'number') await update($, life, () => savedLife)
     await update($, approval, () => null)
@@ -349,13 +352,16 @@ export const register: Register = on => {
       )
     }
 
+    const th = await read($, theme)
+    const pp = PAPERS[th]
     const E = $.ui.resolve(e)
     const { Box, Text, Button, Svg } = E
-    const PASTELS = [J.pink, J.lilac, J.mint] as const
+    const PASTELS = [pp.pink, pp.lilac, pp.mint] as const
     // Every card alike: white, the same small corner and the same inset on all four sides; the title in serif.
-    const card = (key: string, title: string, children: RenderChildren) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
-        {title && <Svg source={headingSvg(title)} alt={title} />}
+    // Every card alike in shape and inset; each in its own soft paper color.
+    const card = (key: string, title: string, children: RenderChildren, bg: string = pp.card) => (
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={bg} borderStyle="round" borderColor={bg}>
+        {title && <Svg source={headingSvg(title, pp)} alt={title} />}
         {children}
       </Box>
     )
@@ -376,8 +382,8 @@ export const register: Register = on => {
     const isResting = status === 'waiting' || status === 'done'
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={J.cream} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
-        <Svg source={greetingSvg(L.hello(who), dateLine(lg, at), (who[0] ?? '☺').toUpperCase())} alt={L.hello(who)} />
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={pp.cream} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
+        <Svg source={greetingSvg(L.hello(who), dateLine(lg, at), (who[0] ?? '☺').toUpperCase(), pp)} alt={L.hello(who)} />
         <Svg
           source={nowSvg({
             status,
@@ -393,16 +399,16 @@ export const register: Register = on => {
             chip('five_hour', 'pink'),
             chip('seven_day', 'lilac'),
             { title: L.session, value: qt.contextPct === null ? '–' : `${Math.round(qt.contextPct)}%`, tag: '', note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote, tone: 'mint' },
-          ])}
+          ], pp)}
           alt={L.limits}
         />
-        <Svg source={statsSvg(String(mainActs), L.statsCaption, L.statsTitle, pills, L.timeEmpty)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />
+        <Svg source={statsSvg(String(mainActs), L.statsCaption, L.statsTitle, pills, L.timeEmpty, pp)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />
 
         {card(
           'results',
           L.results,
           made.length === 0 ? (
-            <Text size="footnote" color={J.soft}>
+            <Text size="footnote" color={pp.soft}>
               {L.resultsEmpty}
             </Text>
           ) : (
@@ -420,11 +426,11 @@ export const register: Register = on => {
                   borderColor={PASTELS[i % PASTELS.length]}
                 >
                   <Box flexGrow={1} flexShrink={1}>
-                    <Text size="footnote" weight="semibold" color={J.ink} wrap="truncate-end">
+                    <Text size="footnote" weight="semibold" color={pp.ink} wrap="truncate-end">
                       {o.title}
                     </Text>
                   </Box>
-                  <Text size="footnote" color={J.soft}>
+                  <Text size="footnote" color={pp.soft}>
                     {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
                   </Text>
                   {OpenButton(E, $, o.href, L.open, `open-${i}`)}
@@ -432,31 +438,44 @@ export const register: Register = on => {
               ))}
             </Box>
           ),
+          pp.butter,
         )}
 
         {card(
           'log',
           L.log,
-          LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: J.ink, soft: J.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
+          LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: pp.ink, soft: pp.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
         )}
 
         {card(
           'totals',
           L.totals,
-          <Text size="footnote" color={J.ink}>
+          <Text size="footnote" color={pp.ink}>
             {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
           </Text>,
+          pp.mint,
         )}
 
         {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}
-        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={J.card} borderStyle="round" borderColor={J.card}>
+        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
           <Text color={J.sunDeep}>✿</Text>
           {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
               const next = !isAlerting
               await update($, alerts, () => next)
               await $.store.set('alerts', next)
             })}
-          {Credit(E, $, L.madeBy, J.soft)}
+          <Button
+            key="toggle-theme"
+            variant="secondary"
+            onPress={async () => {
+              const next = th === 'dark' ? 'light' : 'dark'
+              await update($, theme, () => next)
+              await $.store.set('theme', next)
+            }}
+          >
+            {th === 'dark' ? '☀' : '☾'}
+          </Button>
+          {Credit(E, $, L.madeBy, pp.soft)}
         </Box>
       </Box>
     )

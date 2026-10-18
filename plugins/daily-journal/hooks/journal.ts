@@ -27,6 +27,25 @@ export const J = {
   bars: ['#FDBA2C', '#7A4234', '#8BA236', '#7A7363'],
 } as const
 
+/** The paper the journal is drawn on: its ground, cards, ink and pastels, light or dark. The sunny card keeps its own colors. */
+export type Paper = {
+  cream: string
+  card: string
+  ink: string
+  soft: string
+  line: string
+  pink: string
+  lilac: string
+  mint: string
+  butter: string
+  tagBg: string
+}
+
+export const PAPERS: { light: Paper; dark: Paper } = {
+  light: { cream: J.cream, card: J.card, ink: J.ink, soft: J.soft, line: J.line, pink: J.pink, lilac: J.lilac, mint: J.mint, butter: '#FFF1C9', tagBg: '#FFFFFF' },
+  dark: { cream: '#1E1B17', card: '#2A2620', ink: '#F3ECE2', soft: '#A89F92', line: '#3A342D', pink: '#4A3236', lilac: '#37335A', mint: '#2E4430', butter: '#3D3420', tagBg: '#1E1B17' },
+}
+
 function esc(t: string): string {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
@@ -52,8 +71,8 @@ function text(x: number, y: number, size: number, weight: number, fill: string, 
 }
 
 /** A card's title, as a thin strip of its own. */
-export function headingSvg(title: string): string {
-  return svg(22, text(0, 16, 15, 700, J.ink, title))
+export function headingSvg(title: string, pp: Paper = PAPERS.light): string {
+  return svg(22, text(0, 16, 15, 700, pp.ink, title))
 }
 
 function svg(h: number, body: string): string {
@@ -61,12 +80,12 @@ function svg(h: number, body: string): string {
 }
 
 /** Greeting, the date, and a round avatar with the person's initial. */
-export function greetingSvg(hello: string, date: string, initial: string): string {
+export function greetingSvg(hello: string, date: string, initial: string, pp: Paper = PAPERS.light): string {
   const H = 72
   return svg(
     H,
-    text(0, 34, 24, 700, J.ink, clip(hello, 24, W - 80)) +
-      text(0, 58, 13, 400, J.soft, date) +
+    text(0, 34, 24, 700, pp.ink, clip(hello, 24, W - 80)) +
+      text(0, 58, 13, 400, pp.soft, date) +
       `<defs><linearGradient id="av" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB15C"/><stop offset="1" stop-color="${J.orange}"/></linearGradient></defs>` +
       `<circle cx="${W - 24}" cy="34" r="24" fill="url(#av)"/>` +
       text(W - 24, 42, 20, 700, '#FFFFFF', initial, 'middle'),
@@ -149,23 +168,23 @@ export function nowSvg(d: NowCard): string {
 export type Chip = { title: string; value: string; tag: string; note: string; tone: 'pink' | 'lilac' | 'mint' }
 
 /** The usage limits as three pastel cards, each with a white pill tag. */
-export function chipsSvg(chips: readonly Chip[]): string {
+export function chipsSvg(chips: readonly Chip[], pp: Paper = PAPERS.light): string {
   const H = 104
   const gap = 8
   const w = (W - gap * (chips.length - 1)) / chips.length
-  const tones = { pink: [J.pink, J.pinkInk], lilac: [J.lilac, J.lilacInk], mint: [J.mint, J.mintInk] } as const
+  const tones = { pink: [pp.pink, J.pinkInk], lilac: [pp.lilac, J.lilacInk], mint: [pp.mint, J.mintInk] } as const
   let body = ''
   chips.forEach((c, i) => {
     const x = i * (w + gap)
     const [bg, ink] = tones[c.tone]
     body += `<rect x="${x}" y="0" width="${w}" height="${H}" rx="${R}" fill="${bg}"/>`
-    body += text(x + 14, 26, 12.5, 600, J.ink, c.title)
-    body += text(x + 14, 56, 26, 700, J.ink, c.value)
+    body += text(x + 14, 26, 12.5, 600, pp.ink, c.title)
+    body += text(x + 14, 56, 26, 700, pp.ink, c.value)
     if (c.tag) {
       const tw = widthOf(c.tag, 11) + 16
-      body += `<rect x="${x + 12}" y="${H - 34}" width="${tw}" height="20" rx="10" fill="#FFFFFF"/>` + text(x + 20, H - 20, 11, 700, ink, c.tag)
+      body += `<rect x="${x + 12}" y="${H - 34}" width="${tw}" height="20" rx="10" fill="${pp.tagBg}"/>` + text(x + 20, H - 20, 11, 700, ink, c.tag)
     } else if (c.note) {
-      body += text(x + 14, H - 20, 11, 400, J.soft, clip(c.note, 11, w - 24))
+      body += text(x + 14, H - 20, 11, 400, pp.soft, clip(c.note, 11, w - 24))
     }
   })
   return svg(H, body)
@@ -174,12 +193,12 @@ export function chipsSvg(chips: readonly Chip[]): string {
 export type Pill = { label: string; pct: number }
 
 /** A big number with its caption, beside up to four rounded pill bars. */
-export function statsSvg(big: string, caption: string, title: string, pills: readonly Pill[], empty = ''): string {
+export function statsSvg(big: string, caption: string, title: string, pills: readonly Pill[], empty = '', pp: Paper = PAPERS.light): string {
   const H = 206
-  let body = `<rect x="0" y="0" width="${W}" height="${H}" rx="${R}" fill="${J.card}"/>`
-  body += text(PAD, 36, 15, 700, J.ink, title)
-  body += text(PAD, 104, 48, 800, J.ink, big)
-  body += text(PAD, 128, 12, 400, J.soft, caption)
+  let body = `<rect x="0" y="0" width="${W}" height="${H}" rx="${R}" fill="${pp.card}"/>`
+  body += text(PAD, 36, 15, 700, pp.ink, title)
+  body += text(PAD, 104, 48, 800, pp.ink, big)
+  body += text(PAD, 128, 12, 400, pp.soft, caption)
   const n = Math.max(1, pills.length)
   const area = W - 150 - 20
   const pw = Math.min(30, (area - (n - 1) * 8) / n)
@@ -188,12 +207,12 @@ export function statsSvg(big: string, caption: string, title: string, pills: rea
   pills.forEach((p, i) => {
     const x = 150 + i * (pw + 8)
     const h = Math.max(pw, ((bottom - top) * p.pct) / 100)
-    body += `<rect x="${x}" y="${top}" width="${pw}" height="${bottom - top}" rx="${pw / 2}" fill="${J.line}"/>`
+    body += `<rect x="${x}" y="${top}" width="${pw}" height="${bottom - top}" rx="${pw / 2}" fill="${pp.line}"/>`
     body += `<rect x="${x}" y="${bottom - h}" width="${pw}" height="${h}" rx="${pw / 2}" fill="${J.bars[i % J.bars.length]}"/>`
     body += text(x + pw / 2, bottom - 10, 10, 700, '#FFFFFF', `${p.pct}%`, 'middle')
-    body += text(x + pw / 2, bottom + 20, 11, 400, J.ink, clip(p.label, 11, pw + 14), 'middle')
+    body += text(x + pw / 2, bottom + 20, 11, 400, pp.ink, clip(p.label, 11, pw + 14), 'middle')
   })
-  if (pills.length === 0) body += text(150, 104, 12, 400, J.soft, clip(empty, 12, W - 170))
+  if (pills.length === 0) body += text(150, 104, 12, 400, pp.soft, clip(empty, 12, W - 170))
   return svg(H, body)
 }
 
