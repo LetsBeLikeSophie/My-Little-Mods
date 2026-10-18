@@ -26,9 +26,9 @@ import type { IconKind } from './journal'
 // ── from shared/engine.tsx (scripts/sync-shared.mjs): edit that file, not this block ──
 // The helpers that use the engine ($). The directory reads a mod's calls on
 // $ only in the file that registers its hooks, so these live in register.tsx.
-// The one program a mod runs is Windows PowerShell, with fixed scripts written
-// in each call; what changes (a title, a file path) travels in environment
-// variables, never in the command line.
+// The one program a mod runs is Windows PowerShell: a fixed one-line command,
+// or the mod's own readable scripts/notify.ps1. What changes (a title, a file
+// path) travels in environment variables, never in the command line.
 
 const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 
@@ -44,8 +44,8 @@ function fileUrl($: EngineInterface, rel: string): string {
 
 /**
  * Getting the person's attention: an in-app toast always; then a small Windows
- * notification (what happened, with the mod's logo) and its sound in one
- * PowerShell run, or the
+ * notification (what happened, with the mod's logo) and its sound, both by
+ * the mod's scripts/notify.ps1, or the
  * engine's own notification and sound elsewhere.
  */
 async function alert($: EngineInterface, a: Alert): Promise<void> {
@@ -56,7 +56,7 @@ async function alert($: EngineInterface, a: Alert): Promise<void> {
     if (a.sound) await $.audio.play({ asset: a.sound }).catch(() => undefined)
     return
   }
-  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml("<toast><visual></visual></toast>"); $b = $d.CreateElement("binding"); $b.SetAttribute("template", "ToastGeneric"); $d.GetElementsByTagName("visual").Item(0).AppendChild($b) | Out-Null; $t1 = $d.CreateElement("text"); $t1.AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $b.AppendChild($t1) | Out-Null; $t2 = $d.CreateElement("text"); $t2.AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; $b.AppendChild($t2) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement("text"); $e.SetAttribute("placement", "attribution"); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement("image"); $e.SetAttribute("placement", "appLogoOverride"); $e.SetAttribute("hint-crop", "circle"); $e.SetAttribute("src", $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement("audio"); $e.SetAttribute("silent", "true"); $d.DocumentElement.AppendChild($e) | Out-Null }; $s = [string][char]92; $app = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}" + $s + "WindowsPowerShell" + $s + "v1.0" + $s + "powershell.exe"; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app).Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
+  await $.process.run(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', `${$.plugin.root}/scripts/notify.ps1`], {
       env: {
         MLM_TITLE: a.title,
         MLM_BODY: a.body,

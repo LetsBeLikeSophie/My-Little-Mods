@@ -13,8 +13,8 @@ COMMON_EN = """## What it shows
 
 Everything stays on your computer. The mod sends nothing over the network and reads no credentials.
 
-- **One program, Windows PowerShell, always with a fixed script.** What changes (a title, a file path) is passed in environment variables, never in the command line. It runs PowerShell for three things:
-  - **Alerts:** when Claude waits for your approval, or finishes a request that took 30 seconds or more, it shows a small Windows notification saying what happened, with this mod's logo (`images/`), and plays one of its sounds (`sounds/`). Turn alerts off with the 🔔 button; then only the in-app toast shows. On macOS and Linux it uses Claude Code's own notification and sound instead.
+- **One program, Windows PowerShell, with fixed scripts:** the readable [`scripts/notify.ps1`](scripts/notify.ps1) in this folder, or a fixed one-line command. What changes (a title, a file path) is passed in environment variables, never in the command line. It runs PowerShell for three things:
+  - **Alerts:** when Claude waits for your approval, or finishes a request that took 30 seconds or more, `scripts/notify.ps1` shows a small Windows notification saying what happened, with this mod's logo (`images/`), and plays one of its sounds (`sounds/`). Turn alerts off with the 🔔 button; then only the in-app toast shows. On macOS and Linux it uses Claude Code's own notification and sound instead.
   - **Language:** once per session, `(Get-UICulture).Name` picks Korean or English. Elsewhere it reads `LANG` / `LC_ALL`.
   - **Opening a result:** the Open button and the GitHub button run `Start-Process` on that file or link.
 - **Hooks, and what they decide:** it watches tool calls, requests and usage to draw the pane; it never changes or blocks a tool call. It does not take part in permission decisions: it listens to Claude Code's `Notification` event, and when that says Claude needs your permission it shows "waiting for approval" and rings the alert. It also draws the pane, the line above the prompt, a mark in the footer, and adds one command.
@@ -33,8 +33,8 @@ COMMON_KO = """## 보여 주는 것
 
 모든 정보는 내 컴퓨터 안에만 있어요. 네트워크로 아무것도 보내지 않고, 인증 정보도 읽지 않아요.
 
-- **실행하는 프로그램은 윈도우 PowerShell 하나뿐이고, 항상 고정된 스크립트로 실행해요.** 바뀌는 값(알림 제목, 파일 경로)은 명령줄이 아니라 환경 변수로 넘겨요. PowerShell은 세 가지에 써요.
-  - **알림:** 승인을 기다리거나 30초 이상 걸린 요청이 끝나면, 무슨 일인지 알려 주는 작은 윈도우 알림(이 모드 로고 `images/` 포함)을 띄우고 소리(`sounds/`)를 재생해요. 🔔 버튼으로 끄면 앱 안 알림만 떠요. macOS·Linux에서는 Claude Code 자체 알림과 소리를 써요.
+- **실행하는 프로그램은 윈도우 PowerShell 하나뿐이고, 고정된 스크립트만 실행해요:** 이 폴더의 읽기 쉬운 [`scripts/notify.ps1`](scripts/notify.ps1)이나 고정된 한 줄 명령이에요. 바뀌는 값(알림 제목, 파일 경로)은 명령줄이 아니라 환경 변수로 넘겨요. PowerShell은 세 가지에 써요.
+  - **알림:** 승인을 기다리거나 30초 이상 걸린 요청이 끝나면, `scripts/notify.ps1`이 무슨 일인지 알려 주는 작은 윈도우 알림(이 모드 로고 `images/` 포함)을 띄우고 소리(`sounds/`)를 재생해요. 🔔 버튼으로 끄면 앱 안 알림만 떠요. macOS·Linux에서는 Claude Code 자체 알림과 소리를 써요.
   - **언어:** 세션마다 한 번 `(Get-UICulture).Name`으로 한국어/영어를 골라요. 다른 OS에서는 `LANG` / `LC_ALL`을 읽어요.
   - **결과물 열기:** 열기 버튼과 GitHub 버튼은 그 파일이나 링크를 `Start-Process`로 열어요.
 - **훅과 결정:** 도구 실행, 요청, 사용량을 지켜보고 패널을 그려요. 도구 실행을 바꾸거나 막지 않아요. 권한 결정에는 끼어들지 않아요. Claude Code의 `Notification` 이벤트를 듣고, 권한이 필요하다는 알림이 오면 "승인 대기 중" 표시와 알림만 띄워요. 그 밖에 패널, 입력창 위 한 줄, 아래 표시를 그리고 명령어 하나를 추가해요.

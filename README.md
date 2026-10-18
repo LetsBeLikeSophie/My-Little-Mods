@@ -101,7 +101,7 @@ Its settings go with it. If you ran an older version, a tiny file `~/.claude/my-
 
 ## Developing
 
-Code all mods share lives in `shared/` (bookkeeping in `core.ts`, alerts in `alerts.ts`, the log, buttons and pane helpers in `parts.tsx`). Each mod is installed on its own, so it carries a copy in its `hooks/` folder. Edit the file in `shared/`, then copy it out:
+Code all mods share lives in `shared/` (bookkeeping in `core.ts`, the log and alerts switch in `parts.tsx`, the helpers that use the engine in `engine.tsx`, the notification script `notify.ps1`). Each mod is installed on its own, so it carries a copy in its `hooks/` folder. Edit the file in `shared/`, then copy it out:
 
 ```bash
 node scripts/sync-shared.mjs

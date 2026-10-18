@@ -101,7 +101,7 @@ claude plugin uninstall my-little-rpg@my-little-mods
 
 ## 개발할 때
 
-모든 모드가 같이 쓰는 코드는 `shared/`에 있어요 (기록 정리 `core.ts`, 알림 `alerts.ts`, 로그·버튼·패널 도우미 `parts.tsx`). 모드는 하나씩 따로 설치되니까 각자 `hooks/` 폴더에 복사본을 갖고 있어요. `shared/`에서 고친 다음 복사해요:
+모든 모드가 같이 쓰는 코드는 `shared/`에 있어요 (기록 정리 `core.ts`, 로그·알림 버튼 `parts.tsx`, 엔진을 쓰는 도우미 `engine.tsx`, 알림 스크립트 `notify.ps1`). 모드는 하나씩 따로 설치되니까 각자 `hooks/` 폴더에 복사본을 갖고 있어요. `shared/`에서 고친 다음 복사해요:
 
 ```bash
 node scripts/sync-shared.mjs
