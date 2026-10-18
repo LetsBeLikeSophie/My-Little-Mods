@@ -98,7 +98,7 @@ Start a new session afterwards. To remove it: `/plugin uninstall {name}@my-littl
 {COMMON_EN}
 ## License
 
-MIT, by Sophie.{d['extra_en']}"""
+MIT, by Sophie. [Privacy policy](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/PRIVACY.md) · [Terms of use](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/TERMS.md).{d['extra_en']}"""
     ko = f"""# {d['title']}
 
 [English](README.md) · **한국어**
@@ -126,7 +126,7 @@ Claude Code용 [My Little Mods](https://github.com/LetsBeLikeSophie/My-Little-Mo
 {COMMON_KO}
 ## 라이선스
 
-MIT, 만든 사람 Sophie.{d['extra_ko']}"""
+MIT, 만든 사람 Sophie. [개인정보 처리방침](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/PRIVACY.md#개인정보-처리방침) · [이용약관](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/TERMS.md#이용약관).{d['extra_ko']}"""
     open(f'{root}/{m}/README.md', 'w', encoding='utf-8').write(en)
     open(f'{root}/{m}/README.ko.md', 'w', encoding='utf-8').write(ko)
 print('ok')

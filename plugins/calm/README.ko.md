@@ -44,4 +44,4 @@ Claude Code용 [My Little Mods](https://github.com/LetsBeLikeSophie/My-Little-Mo
 
 ## 라이선스
 
-MIT, 만든 사람 Sophie.
+MIT, 만든 사람 Sophie. [개인정보 처리방침](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/PRIVACY.md#개인정보-처리방침) · [이용약관](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/TERMS.md#이용약관).

@@ -111,6 +111,8 @@ node scripts/sync-shared.mjs
 
 ## License
 
+[Privacy policy](PRIVACY.md) · [Terms of use](TERMS.md): the mods collect and send nothing.
+
 Code: [MIT](LICENSE). The pixel font [Galmuri11](https://github.com/quiple/galmuri) bundled in RPG is under the SIL Open Font License 1.1 ([OFL-Galmuri.txt](plugins/rpg/OFL-Galmuri.txt)).
 
 made by Sophie

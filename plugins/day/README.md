@@ -44,4 +44,4 @@ Everything stays on your computer. The mod sends nothing over the network and re
 
 ## License
 
-MIT, by Sophie.
+MIT, by Sophie. [Privacy policy](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/PRIVACY.md) · [Terms of use](https://github.com/LetsBeLikeSophie/My-Little-Mods/blob/main/TERMS.md).

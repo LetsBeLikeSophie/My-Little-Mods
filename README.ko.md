@@ -111,6 +111,8 @@ node scripts/sync-shared.mjs
 
 ## 라이선스
 
+[개인정보 처리방침](PRIVACY.md#개인정보-처리방침) · [이용약관](TERMS.md#이용약관): 모드는 아무것도 수집하거나 보내지 않아요.
+
 코드: [MIT](LICENSE). RPG에 들어 있는 픽셀 글꼴 [Galmuri11](https://github.com/quiple/galmuri)은 SIL Open Font License 1.1이에요 ([OFL-Galmuri.txt](plugins/rpg/OFL-Galmuri.txt)).
 
 made by Sophie
