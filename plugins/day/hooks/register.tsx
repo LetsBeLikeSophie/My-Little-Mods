@@ -18,9 +18,104 @@ import {
 } from './core'
 import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
-import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
+import { AlertsButton, LogLines } from './parts'
+import type { Parts } from './parts'
 import { J, PAPERS, bandSvg, greetingSvg, headingSvg, nowSvg, skyOf, statsSvg } from './journal'
 import type { IconKind } from './journal'
+
+// ── from shared/engine.tsx (scripts/sync-shared.mjs): edit that file, not this block ──
+// The helpers that use the engine ($). The directory reads a mod's calls on
+// $ only in the file that registers its hooks, so these live in register.tsx.
+// The one program a mod runs is Windows PowerShell, with fixed scripts written
+// in each call; what changes (a title, a file path) travels in environment
+// variables, never in the command line.
+
+const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
+
+/** How a mod dresses its notification: its name, and pictures shipped with it (paths under the mod's folder). */
+type AlertLook = { tag: string; logo?: string; hero?: string }
+
+type Alert = { title: string; body: string; sound?: string; isNative: boolean; look?: AlertLook }
+
+/** A file of the mod's as the file:/// address a Windows toast reads pictures from. */
+function fileUrl($: EngineInterface, rel: string): string {
+  return `file:///${`${$.plugin.root}/${rel}`.replace(/\\/g, '/')}`
+}
+
+/**
+ * Getting the person's attention: an in-app toast always; then a Windows
+ * notification in the mod's look with its sound (one PowerShell run), or the
+ * engine's own notification and sound elsewhere.
+ */
+async function alert($: EngineInterface, a: Alert): Promise<void> {
+  $.ui.toast(`${a.title} · ${a.body}`)
+  if (!a.isNative) return
+  if ((await $.env.get('OS')) !== 'Windows_NT') {
+    await $.ui.notify(a.body, { title: a.title }).catch(() => undefined)
+    if (a.sound) await $.audio.play({ asset: a.sound }).catch(() => undefined)
+    return
+  }
+  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml(\'<toast><visual><binding template="ToastGeneric"><text/><text/></binding></visual></toast>\'); $b = $d.GetElementsByTagName(\'binding\').Item(0); $x = $d.GetElementsByTagName(\'text\'); $x.Item(0).AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $x.Item(1).AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement(\'text\'); $e.SetAttribute(\'placement\', \'attribution\'); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'appLogoOverride\'); $e.SetAttribute(\'hint-crop\', \'circle\'); $e.SetAttribute(\'src\', $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_HERO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'hero\'); $e.SetAttribute(\'src\', $env:MLM_HERO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement(\'audio\'); $e.SetAttribute(\'silent\', \'true\'); $d.DocumentElement.AppendChild($e) | Out-Null }; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe\').Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
+      env: {
+        MLM_TITLE: a.title,
+        MLM_BODY: a.body,
+        MLM_TAG: a.look?.tag ?? '',
+        MLM_LOGO: a.look?.logo ? fileUrl($, a.look.logo) : '',
+        MLM_HERO: a.look?.hero ? fileUrl($, a.look.hero) : '',
+        MLM_WAV: a.sound ? `${$.plugin.root}\\${a.sound.replace(/\//g, '\\')}` : '',
+      },
+      timeoutMs: 15_000,
+    })
+    .catch(() => undefined)
+}
+
+/**
+ * Whether this mod's pane is the one on screen. Every mod may draw the band
+ * above the prompt and ring an alert; only the mod whose pane is shown does.
+ */
+async function isPaneShown($: EngineInterface, id: string): Promise<boolean> {
+  try {
+    return (await $.ui.panes()).some(p => p.id === id && p.isShown)
+  } catch {
+    return false
+  }
+}
+
+/** An alert from the mod on screen only, so several mods never ring at once. */
+async function alertIfShown($: EngineInterface, id: string, a: Alert): Promise<void> {
+  if (await isPaneShown($, id)) await alert($, a)
+}
+
+/** Opens a result: a link in the browser, a file in its own app (Windows). */
+function openThing($: EngineInterface, target: string): void {
+  void $.process.run(['powershell', '-NoProfile', '-Command', 'Start-Process -FilePath $env:MLM_OPEN'], { env: { MLM_OPEN: target }, timeoutMs: 15_000 }).catch(() => undefined)
+}
+
+/** A native Open button for a result. */
+function OpenButton(E: Parts, $: EngineInterface, target: string, label: string, key: string) {
+  const { Button } = E
+  return (
+    <Button key={key} variant="secondary" onPress={() => openThing($, target)}>
+      {label}
+    </Button>
+  )
+}
+
+/** "made by Sophie" in the mod's quiet color, and a GitHub button to the repository. */
+function Credit(E: Parts, $: EngineInterface, text: string, color: string) {
+  const { Box, Text, Button } = E
+  return (
+    <Box flexDirection="row" gap="sm" alignItems="center">
+      <Text size="footnote" color={color}>
+        {text}
+      </Text>
+      <Button key="credit-link" variant="secondary" onPress={() => openThing($, MAKER_URL)}>
+        GitHub
+      </Button>
+    </Box>
+  )
+}
+// ── end of shared/engine.tsx ──
 
 const PANE = 'day'
 const TITLE = 'Day'
@@ -45,21 +140,14 @@ type Life = { quests: number; slain: number; actions: number }
 const LONG_TURN_MS = 30_000
 const APPROVAL_ALERT_MS = 4_000
 
-/** The person's name for the greeting: what they set, else git's user.name. */
-async function guessName($: EngineInterface): Promise<string> {
-  const saved = await $.store.get('name')
-  if (typeof saved === 'string' && saved) return saved
-  const r = await $.process.run(['git', 'config', '--global', 'user.name'], { timeoutMs: 5000 }).catch(() => undefined)
-  return r && r.exitCode === 0 ? r.stdout.trim().split(/\s+/)[0] ?? '' : ''
-}
 
 /** "10월 17일 금요일 · 오후" / "Fri, Oct 17 · Afternoon". */
 function dateLine(lg: Lang, at: number): string {
   const d = new Date(at)
-  const h = d.getHours()
+  const hour = d.getHours()
   const part = lg === 'ko'
-    ? h < 12 ? '오전' : h < 18 ? '오후' : '저녁'
-    : h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'
+    ? hour < 12 ? '오전' : hour < 18 ? '오후' : '저녁'
+    : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening'
   const day = d.toLocaleDateString(lg === 'ko' ? 'ko-KR' : 'en-US', lg === 'ko' ? { month: 'long', day: 'numeric', weekday: 'long' } : { weekday: 'short', month: 'short', day: 'numeric' })
   return `${day} · ${part}`
 }
@@ -94,7 +182,8 @@ export const register: Register = on => {
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
     await $.command.register({ name: 'log-day', description: `${UI.ko.command} / ${UI.en.command}` })
-    void guessName($).then(n => update($, name, () => n)).catch(() => undefined)
+    const savedName = await $.store.get('name')
+    if (typeof savedName === 'string' && savedName) await update($, name, () => savedName)
     const savedAlerts = await $.store.get('alerts')
     if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
     const savedTheme = await $.store.get('theme')
@@ -105,8 +194,8 @@ export const register: Register = on => {
     void $.session.usage().then(u => update($, quota, () => quotaFrom(u))).catch(() => undefined)
     ticker?.cancel()
     ticker = $.clock.every(1000, () => void update($, now, () => Date.now()))
-    // Open by command; a new session reopens only the mod that was used last.
-    if (await wasLast($, PANE)) void $.ui.open({ id: PANE, title: TITLE })
+    // Open by command; a pane left open at the end of the last session opens again.
+    if ((await $.store.get('open')) === true) void $.ui.open({ id: PANE, title: TITLE })
 
     return next(e)
   })
@@ -120,9 +209,15 @@ export const register: Register = on => {
       await $.store.set('name', who)
     }
     await $.ui.open({ id: PANE, title: TITLE })
-    await rememberLast($, PANE)
+    await $.store.set('open', true)
 
     return { text: who ? UI[lg].named(who) : UI[lg].opened }
+  })
+
+  // A pane the person closes stays closed next session; quitting or a reload doesn't count.
+  on('ui.close', async ($, e, next) => {
+    if (e.id === PANE && e.origin.kind === 'person') await $.store.set('open', false)
+    return next(e)
   })
 
   on('turn.start', async ($, e, next) => {
@@ -505,17 +600,17 @@ export const register: Register = on => {
         {/* The settings strip: the bell and the night switch at the left, the maker at the right. */}
         <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
           {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
-              const next = !isAlerting
-              await update($, alerts, () => next)
-              await $.store.set('alerts', next)
+              const flipped = !isAlerting
+              await update($, alerts, () => flipped)
+              await $.store.set('alerts', flipped)
             })}
           <Button
             key="toggle-theme"
             variant="secondary"
             onPress={async () => {
-              const next = th === 'dark' ? 'light' : 'dark'
-              await update($, theme, () => next)
-              await $.store.set('theme', next)
+              const flipped = th === 'dark' ? 'light' : 'dark'
+              await update($, theme, () => flipped)
+              await $.store.set('theme', flipped)
             }}
           >
             {th === 'dark' ? '☀️' : '🌙'}

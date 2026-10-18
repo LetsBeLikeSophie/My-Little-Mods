@@ -67,11 +67,11 @@ claude plugin uninstall my-little-rpg@my-little-mods
 
 To drop the marketplace too: `/plugin marketplace remove my-little-mods`. In the desktop app: **+** next to the prompt box → **Plugins**.
 
-A tiny file, `~/.claude/my-little-mods.json` (which mod you opened last), may stay behind; delete it if you like.
+Its settings go with it. If you ran an older version, a tiny file `~/.claude/my-little-mods.json` may be left; delete it if you like.
 
 ## Using them
 
-- A mod opens with its command. A new session reopens only the mod you opened last.
+- A mod opens with its command. A pane left open reopens in the next session; one you close stays closed.
 - With several installed, the line above the prompt, the footer mark and the alerts come from the mod whose pane is on screen, so they never pile up.
 - Korean or English, following the system language.
 
@@ -89,7 +89,7 @@ A tiny file, `~/.claude/my-little-mods.json` (which mod you opened last), may st
 
 ### Day — `/log-day`
 
-- A greeting with your name: `/log-day name Sophie` (otherwise your git name).
+- A greeting with your name: `/log-day name Sophie`.
 - The "now" card wears the sky of the hour: dawn, day, sunset or night, with a small sun or moon.
 - Pastel limit cards, a big number beside pill charts, results as pastel strips. Light and dark (🌙/☀️).
 
