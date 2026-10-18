@@ -502,9 +502,8 @@ export const register: Register = on => {
           'flower',
         )}
 
-        {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}
+        {/* The settings strip: the bell and the night switch at the left, the maker at the right. */}
         <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
-          <Text color={J.sunDeep}>✿</Text>
           {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
               const next = !isAlerting
               await update($, alerts, () => next)
@@ -519,8 +518,10 @@ export const register: Register = on => {
               await $.store.set('theme', next)
             }}
           >
-            {th === 'dark' ? '☀' : '☾'}
+            {th === 'dark' ? '☀️' : '🌙'}
           </Button>
+          {/* the maker at the far right */}
+          <Box flexGrow={1} />
           {Credit(E, $, L.madeBy, pp.soft)}
         </Box>
       </Box>
