@@ -1,10 +1,20 @@
 {
   "name": "calm",
   "version": "1.0.0",
-  "description": "Calm: a quiet dashboard with thin rings, serif titles and one accent color of your choice",
+  "description": "🍃 Calm — A quiet dashboard: thin rings for your usage limits, serif titles, and one soft accent color you pick. Open with /calm.",
   "author": {
     "name": "Sophie",
     "url": "https://github.com/LetsBeLikeSophie"
   },
+  "homepage": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "repository": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "license": "MIT",
+  "keywords": [
+    "calm",
+    "minimal",
+    "dashboard",
+    "status",
+    "usage-limits"
+  ],
   "types": "./types/index.d.ts"
 }

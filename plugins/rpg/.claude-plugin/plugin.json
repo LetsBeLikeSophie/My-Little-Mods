@@ -1,10 +1,21 @@
 {
   "name": "rpg",
   "version": "1.0.0",
-  "description": "RPG: a pixel-art camp where your chosen hero acts out what Claude is doing",
+  "description": "⚔️ RPG — A pixel-art camp: your hero acts out what Claude is doing, levels up as you work, and finds a glowing treasure chest when a quest is done. Open with /rpg.",
   "author": {
     "name": "Sophie",
     "url": "https://github.com/LetsBeLikeSophie"
   },
+  "homepage": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "repository": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "license": "MIT",
+  "keywords": [
+    "rpg",
+    "pixel-art",
+    "game",
+    "status",
+    "dashboard",
+    "usage-limits"
+  ],
   "types": "./types/index.d.ts"
 }

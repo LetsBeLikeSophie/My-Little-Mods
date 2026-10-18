@@ -1,10 +1,21 @@
 {
   "name": "day",
   "version": "1.0.0",
-  "description": "Day: a warm journal with the sky of the hour, pastel limit cards and pill charts",
+  "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /day.",
   "author": {
     "name": "Sophie",
     "url": "https://github.com/LetsBeLikeSophie"
   },
+  "homepage": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "repository": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
+  "license": "MIT",
+  "keywords": [
+    "journal",
+    "cute",
+    "pastel",
+    "dashboard",
+    "status",
+    "usage-limits"
+  ],
   "types": "./types/index.d.ts"
 }
