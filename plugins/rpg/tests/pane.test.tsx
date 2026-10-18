@@ -266,11 +266,10 @@ test('XP adds up to levels that each ask a little more', async () => {
   expect(levelOf(130)).toEqual({ level: 3, into: 5, need: 100 })
 })
 
-test('an ask from the engine shows as waiting for approval', async ($, on) => {
+test('a permission prompt shows as waiting for approval', async ($, on) => {
   on('ui.panes', () => ({ value: [{ id: 'rpg', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
-  on('tool.check', () => ({ decision: 'ask' }))
-  const v = await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' }, tool_use_id: 't1' })
-  expect(v.decision).toBe('ask')
+  on('classic.Notification', () => ({}) as any)
+  await ($ as any).classic.Notification({ hook_event_name: 'Notification', message: 'Claude needs your permission to use Bash', notification_type: 'permission_prompt' })
   const ui = await $.ui.mount({
     plugin: 'my-little-rpg',
     surface: 'terminal',

@@ -107,7 +107,7 @@ claude plugin uninstall my-little-rpg@my-little-mods
 node scripts/sync-shared.mjs
 ```
 
-`node scripts/sync-shared.mjs --check`는 복사본이 오래됐으면 실패해요. 알림 그림은 `python scripts/alert-art.py plugins`로 그려요.
+`node scripts/sync-shared.mjs --check`는 복사본이 오래됐으면 실패해요. 알림 로고는 `python scripts/alert-art.py plugins`로, 모드별 README는 `python scripts/mod-readmes.py`로 만들어요.
 
 ## 라이선스
 

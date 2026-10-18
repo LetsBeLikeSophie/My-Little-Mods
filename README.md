@@ -107,7 +107,7 @@ Code all mods share lives in `shared/` (bookkeeping in `core.ts`, alerts in `ale
 node scripts/sync-shared.mjs
 ```
 
-`node scripts/sync-shared.mjs --check` fails if a copy is out of date. The notification pictures are drawn by `python scripts/alert-art.py plugins`.
+`node scripts/sync-shared.mjs --check` fails if a copy is out of date. The notification logos are drawn by `python scripts/alert-art.py plugins`, and each mod's README by `python scripts/mod-readmes.py`.
 
 ## License
 

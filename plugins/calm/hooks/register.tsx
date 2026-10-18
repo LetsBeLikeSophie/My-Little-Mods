@@ -58,7 +58,7 @@ async function alert($: EngineInterface, a: Alert): Promise<void> {
     if (a.sound) await $.audio.play({ asset: a.sound }).catch(() => undefined)
     return
   }
-  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml(\'<toast><visual><binding template="ToastGeneric"><text/><text/></binding></visual></toast>\'); $b = $d.GetElementsByTagName(\'binding\').Item(0); $x = $d.GetElementsByTagName(\'text\'); $x.Item(0).AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $x.Item(1).AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement(\'text\'); $e.SetAttribute(\'placement\', \'attribution\'); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'appLogoOverride\'); $e.SetAttribute(\'hint-crop\', \'circle\'); $e.SetAttribute(\'src\', $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement(\'audio\'); $e.SetAttribute(\'silent\', \'true\'); $d.DocumentElement.AppendChild($e) | Out-Null }; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe\').Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
+  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml("<toast><visual></visual></toast>"); $b = $d.CreateElement("binding"); $b.SetAttribute("template", "ToastGeneric"); $d.GetElementsByTagName("visual").Item(0).AppendChild($b) | Out-Null; $t1 = $d.CreateElement("text"); $t1.AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $b.AppendChild($t1) | Out-Null; $t2 = $d.CreateElement("text"); $t2.AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; $b.AppendChild($t2) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement("text"); $e.SetAttribute("placement", "attribution"); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement("image"); $e.SetAttribute("placement", "appLogoOverride"); $e.SetAttribute("hint-crop", "circle"); $e.SetAttribute("src", $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement("audio"); $e.SetAttribute("silent", "true"); $d.DocumentElement.AppendChild($e) | Out-Null }; $s = [string][char]92; $app = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}" + $s + "WindowsPowerShell" + $s + "v1.0" + $s + "powershell.exe"; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app).Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
       env: {
         MLM_TITLE: a.title,
         MLM_BODY: a.body,
@@ -301,7 +301,7 @@ export const register: Register = on => {
 
     const ran = await next(e)
     const isError = ran.deny !== undefined || ran.isError === true
-    if ((await read($, approval))?.id === act.id) await update($, approval, () => null)
+    if ((await read($, approval)) !== null) await update($, approval, () => null)
     if (e.agentId === undefined) {
       const l = await update($, life, (x: Life) => ({ ...x, actions: x.actions + 1, slain: x.slain + (act.isCheck && !isError ? 1 : 0) }))
       await $.store.set('life', l)
@@ -330,24 +330,25 @@ export const register: Register = on => {
     return ran
   }).catch(($, e, next) => next(e)) // bookkeeping never blocks a tool
 
-  // The engine is about to ask the person whether a call may run: say so, and
-  // if they haven't answered after a few seconds, get their attention.
-  on('tool.check', async ($, e, next) => {
-    const verdict = await next(e)
-    if (verdict.decision === 'ask' && e.agentId === undefined) {
-      const id = e.tool_use_id ?? `${e.tool}-${Date.now()}`
-      await update($, approval, () => ({ id, tool: e.tool, since: Date.now() }))
+  // Claude Code tells the person it needs their permission for a tool: show
+  // it as waiting for approval and, if they haven't answered after a few
+  // seconds, get their attention. Only watching: the decision stays theirs.
+  on('classic.Notification', async ($, e, next) => {
+    if (e.notification_type === 'permission_prompt') {
+      const tool = /\buse (\S+)/.exec(e.message)?.[1] ?? ''
+      const id = `ask-${Date.now()}`
+      await update($, approval, () => ({ id, tool, since: Date.now() }))
       $.clock.after(APPROVAL_ALERT_MS, () => {
         void (async () => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(tool || 'Tool')), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }
-    return verdict
-  }).catch(($, e, next) => next(e))
+    return next(e)
+  })
 
   on('session.measure', async ($, e, next) => {
     await update($, quota, () => quotaFrom(e))
