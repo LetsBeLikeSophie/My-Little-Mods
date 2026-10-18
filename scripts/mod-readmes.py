@@ -1,5 +1,5 @@
 import os
-root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'plugins')  
+root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'plugins')    # where each mod's README.md and README.ko.md are written
 
 COMMON_EN = """## What it shows
 
