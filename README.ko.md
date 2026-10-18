@@ -21,29 +21,35 @@ Claude가 지금 뭘 하는지 보여 주는 Claude Code용 작은 모드 세 �
 
 ## 설치
 
-다른 사람도 이 깃허브 저장소에서 바로 설치해요. Claude Code 터미널 세션의 입력창에서:
+이 저장소는 공개라서 누구나 설치할 수 있어요. Claude Code(터미널)에서 먼저 마켓플레이스를 한 번 추가하고:
 
 ```
-/plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin marketplace add LetsBeLikeSophie/My-Little-Mods
+```
+
+원하는 모드를 설치해요:
+
+```
+/plugin install rpg@my-little-mods
 ```
 
 ```
-/plugin install calm --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install calm@my-little-mods
 ```
 
 ```
-/plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install day@my-little-mods
 ```
 
-처음엔 `Add marketplace?`에 `y`, 그다음 user 범위를 고르면 돼요. 하나만 깔아도 되고 셋 다 깔아도 돼요.
-
-셸에서:
+셸에서 한 줄로:
 
 ```bash
-claude plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
+claude plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 `/plugin`이 안 되는 Claude 데스크톱 앱에서는: 입력창 옆 **+** → **Plugins → Add marketplace**에 `LetsBeLikeSophie/My-Little-Mods`를 넣고 **Add plugin**.
+
+설치한 다음 새 세션을 열고, 명령어로 모드를 열어요.
 
 ## 삭제
 

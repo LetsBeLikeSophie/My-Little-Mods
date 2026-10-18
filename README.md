@@ -21,29 +21,35 @@ All three show the same things:
 
 ## Install
 
-Others install straight from this GitHub repository. At the prompt of a Claude Code terminal session:
+This repository is public, so anyone can install from it. In Claude Code (terminal), first add the marketplace once:
 
 ```
-/plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin marketplace add LetsBeLikeSophie/My-Little-Mods
+```
+
+then install the mods you want:
+
+```
+/plugin install rpg@my-little-mods
 ```
 
 ```
-/plugin install calm --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install calm@my-little-mods
 ```
 
 ```
-/plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install day@my-little-mods
 ```
 
-The first time, answer `y` to `Add marketplace?`, then pick the user scope. Install one, or all three.
-
-From a shell:
+Or in one line from a shell:
 
 ```bash
-claude plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
+claude plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 In the Claude desktop app, where `/plugin` does not run: click **+** next to the prompt box, then **Plugins → Add marketplace** with `LetsBeLikeSophie/My-Little-Mods`, then **Add plugin**.
+
+Start a new session afterwards, then open a mod with its command.
 
 ## Uninstall
 
