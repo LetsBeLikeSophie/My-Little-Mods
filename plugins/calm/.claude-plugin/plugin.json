@@ -10,6 +10,9 @@
   "homepage": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
   "repository": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
   "license": "MIT",
+  "icon": "./images/logo-blue.png",
+  "documentationUrl": "https://github.com/LetsBeLikeSophie/My-Little-Mods/tree/main/plugins/calm#readme",
+  "supportUrl": "https://github.com/LetsBeLikeSophie/My-Little-Mods/issues",
   "keywords": [
     "calm",
     "minimal",

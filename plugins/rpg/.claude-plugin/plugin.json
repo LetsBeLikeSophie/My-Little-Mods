@@ -10,6 +10,9 @@
   "homepage": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
   "repository": "https://github.com/LetsBeLikeSophie/My-Little-Mods",
   "license": "MIT",
+  "icon": "./images/logo.png",
+  "documentationUrl": "https://github.com/LetsBeLikeSophie/My-Little-Mods/tree/main/plugins/rpg#readme",
+  "supportUrl": "https://github.com/LetsBeLikeSophie/My-Little-Mods/issues",
   "keywords": [
     "rpg",
     "pixel-art",
