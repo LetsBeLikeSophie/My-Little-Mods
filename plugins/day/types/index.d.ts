@@ -27,7 +27,7 @@ export type Quota = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'day': {
+    'my-little-day': {
       acts: Act[]
       turn: Turn
       outputs: Output[]

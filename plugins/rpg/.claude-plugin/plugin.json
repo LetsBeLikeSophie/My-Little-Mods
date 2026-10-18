@@ -1,5 +1,6 @@
 {
-  "name": "rpg",
+  "name": "my-little-rpg",
+  "displayName": "My Little RPG",
   "version": "1.0.0",
   "description": "⚔️ RPG — A pixel-art camp: your hero acts out what Claude is doing, levels up as you work, and finds a glowing treasure chest when a quest is done. Open with /log-rpg.",
   "author": {

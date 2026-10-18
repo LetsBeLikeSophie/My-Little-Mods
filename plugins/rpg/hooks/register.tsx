@@ -15,30 +15,30 @@ import type { Lang } from './i18n'
 const PANE = 'rpg'
 const TITLE = 'RPG'
 
-const acts = atom({ plugin: 'rpg', key: 'acts' } as const, [])
-const turn = atom({ plugin: 'rpg', key: 'turn' } as const, {
+const acts = atom({ plugin: 'my-little-rpg', key: 'acts' } as const, [])
+const turn = atom({ plugin: 'my-little-rpg', key: 'turn' } as const, {
   isWorking: false,
   startedAt: 0,
   endedAt: null,
   ids: [],
 })
-const counts = atom({ plugin: 'rpg', key: 'counts' } as const, {})
-const files = atom({ plugin: 'rpg', key: 'files' } as const, [])
-const outputs = atom({ plugin: 'rpg', key: 'outputs' } as const, [])
-const species = atom({ plugin: 'rpg', key: 'species' } as const, 'cat')
-const job = atom({ plugin: 'rpg', key: 'job' } as const, 'warrior')
-const show = atom({ plugin: 'rpg', key: 'show' } as const, { legend: false, picker: false })
-const plan = atom({ plugin: 'rpg', key: 'plan' } as const, { items: [], current: -1 })
-const theme = atom({ plugin: 'rpg', key: 'theme' } as const, 'dark')
-const approval = atom({ plugin: 'rpg', key: 'approval' } as const, null)
-const alerts = atom({ plugin: 'rpg', key: 'alerts' } as const, true)
-const life = atom({ plugin: 'rpg', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
-const lang = atom({ plugin: 'rpg', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
-const spent = atom({ plugin: 'rpg', key: 'spent' } as const, {})
-const logOpen = atom({ plugin: 'rpg', key: 'logOpen' } as const, '')
-const limitBase = atom({ plugin: 'rpg', key: 'limitBase' } as const, { five: null, week: null })
-const quota = atom({ plugin: 'rpg', key: 'quota' } as const, { limits: [], contextPct: null, usd: null })
-const now = atom({ plugin: 'rpg', key: 'now' } as const, 0)
+const counts = atom({ plugin: 'my-little-rpg', key: 'counts' } as const, {})
+const files = atom({ plugin: 'my-little-rpg', key: 'files' } as const, [])
+const outputs = atom({ plugin: 'my-little-rpg', key: 'outputs' } as const, [])
+const species = atom({ plugin: 'my-little-rpg', key: 'species' } as const, 'cat')
+const job = atom({ plugin: 'my-little-rpg', key: 'job' } as const, 'warrior')
+const show = atom({ plugin: 'my-little-rpg', key: 'show' } as const, { legend: false, picker: false })
+const plan = atom({ plugin: 'my-little-rpg', key: 'plan' } as const, { items: [], current: -1 })
+const theme = atom({ plugin: 'my-little-rpg', key: 'theme' } as const, 'dark')
+const approval = atom({ plugin: 'my-little-rpg', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'my-little-rpg', key: 'alerts' } as const, true)
+const life = atom({ plugin: 'my-little-rpg', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
+const lang = atom({ plugin: 'my-little-rpg', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
+const spent = atom({ plugin: 'my-little-rpg', key: 'spent' } as const, {})
+const logOpen = atom({ plugin: 'my-little-rpg', key: 'logOpen' } as const, '')
+const limitBase = atom({ plugin: 'my-little-rpg', key: 'limitBase' } as const, { five: null, week: null })
+const quota = atom({ plugin: 'my-little-rpg', key: 'quota' } as const, { limits: [], contextPct: null, usd: null })
+const now = atom({ plugin: 'my-little-rpg', key: 'now' } as const, 0)
 
 // A quest-log look, in two themes: dark slate or light parchment.
 type Theme = 'dark' | 'light'

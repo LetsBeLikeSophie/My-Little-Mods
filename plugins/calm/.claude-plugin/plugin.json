@@ -1,5 +1,6 @@
 {
-  "name": "calm",
+  "name": "my-little-calm",
+  "displayName": "My Little Calm",
   "version": "1.0.0",
   "description": "🍃 Calm — A quiet dashboard: thin rings for your usage limits, serif titles, and one soft accent color you pick. Open with /log-calm.",
   "author": {

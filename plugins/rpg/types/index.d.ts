@@ -44,7 +44,7 @@ export type Output = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'rpg': {
+    'my-little-rpg': {
       acts: Act[]
       turn: Turn
       counts: { [kind: string]: number }

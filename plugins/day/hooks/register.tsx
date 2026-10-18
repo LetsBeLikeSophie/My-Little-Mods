@@ -25,21 +25,21 @@ import type { IconKind } from './journal'
 const PANE = 'day'
 const TITLE = 'Day'
 
-const acts = atom({ plugin: 'day', key: 'acts' } as const, [])
-const turn = atom({ plugin: 'day', key: 'turn' } as const, { isWorking: false, startedAt: 0, endedAt: null, ids: [] })
-const outputs = atom({ plugin: 'day', key: 'outputs' } as const, [])
-const spent = atom({ plugin: 'day', key: 'spent' } as const, {})
-const quota = atom({ plugin: 'day', key: 'quota' } as const, { limits: [], contextPct: null })
-const limitBase = atom({ plugin: 'day', key: 'limitBase' } as const, { five: null, week: null })
-const plan = atom({ plugin: 'day', key: 'plan' } as const, { items: [], current: -1 })
-const name = atom({ plugin: 'day', key: 'name' } as const, '')
-const lang = atom({ plugin: 'day', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
-const logOpen = atom({ plugin: 'day', key: 'logOpen' } as const, '')
-const now = atom({ plugin: 'day', key: 'now' } as const, 0)
-const approval = atom({ plugin: 'day', key: 'approval' } as const, null)
-const alerts = atom({ plugin: 'day', key: 'alerts' } as const, true)
-const theme = atom({ plugin: 'day', key: 'theme' } as const, 'light')
-const life = atom({ plugin: 'day', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
+const acts = atom({ plugin: 'my-little-day', key: 'acts' } as const, [])
+const turn = atom({ plugin: 'my-little-day', key: 'turn' } as const, { isWorking: false, startedAt: 0, endedAt: null, ids: [] })
+const outputs = atom({ plugin: 'my-little-day', key: 'outputs' } as const, [])
+const spent = atom({ plugin: 'my-little-day', key: 'spent' } as const, {})
+const quota = atom({ plugin: 'my-little-day', key: 'quota' } as const, { limits: [], contextPct: null })
+const limitBase = atom({ plugin: 'my-little-day', key: 'limitBase' } as const, { five: null, week: null })
+const plan = atom({ plugin: 'my-little-day', key: 'plan' } as const, { items: [], current: -1 })
+const name = atom({ plugin: 'my-little-day', key: 'name' } as const, '')
+const lang = atom({ plugin: 'my-little-day', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
+const logOpen = atom({ plugin: 'my-little-day', key: 'logOpen' } as const, '')
+const now = atom({ plugin: 'my-little-day', key: 'now' } as const, 0)
+const approval = atom({ plugin: 'my-little-day', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'my-little-day', key: 'alerts' } as const, true)
+const theme = atom({ plugin: 'my-little-day', key: 'theme' } as const, 'light')
+const life = atom({ plugin: 'my-little-day', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
 
 type Life = { quests: number; slain: number; actions: number }
 const LONG_TURN_MS = 30_000

@@ -30,21 +30,21 @@ Claude가 지금 뭘 하는지 보여 주는 Claude Code용 작은 모드 세 �
 원하는 모드를 설치해요:
 
 ```
-/plugin install rpg@my-little-mods
+/plugin install my-little-rpg@my-little-mods
 ```
 
 ```
-/plugin install calm@my-little-mods
+/plugin install my-little-calm@my-little-mods
 ```
 
 ```
-/plugin install day@my-little-mods
+/plugin install my-little-day@my-little-mods
 ```
 
 셸에서 한 줄로:
 
 ```bash
-claude plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
+claude plugin install my-little-day --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 `/plugin`이 안 되는 Claude 데스크톱 앱에서는: 입력창 옆 **+** → **Plugins → Add marketplace**에 `LetsBeLikeSophie/My-Little-Mods`를 넣고 **Add plugin**.
@@ -53,16 +53,16 @@ claude plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
 
 ## 삭제
 
-입력창에서 (`rpg` 자리에 `calm`이나 `day`):
+입력창에서 (`my-little-rpg` 자리에 `my-little-calm`이나 `my-little-day`):
 
 ```
-/plugin uninstall rpg@my-little-mods
+/plugin uninstall my-little-rpg@my-little-mods
 ```
 
 셸에서:
 
 ```bash
-claude plugin uninstall rpg@my-little-mods
+claude plugin uninstall my-little-rpg@my-little-mods
 ```
 
 마켓플레이스 등록까지 지우려면 `/plugin marketplace remove my-little-mods`. 데스크톱 앱에서는 입력창 옆 **+** → **Plugins**에서 지워요.

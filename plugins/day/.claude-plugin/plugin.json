@@ -1,5 +1,6 @@
 {
-  "name": "day",
+  "name": "my-little-day",
+  "displayName": "My Little Day",
   "version": "1.0.0",
   "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /log-day.",
   "author": {

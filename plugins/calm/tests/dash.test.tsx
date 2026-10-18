@@ -43,7 +43,7 @@ test('the dashboard draws on terminal and desktop', async ($, on) => {
   on('tool.call', () => ({ result: { type: 'create' } }))
   await $.tool.call({ tool: 'Write', file_path: 'C:\\work\\report.md', content: '# hi' })
   for (const surface of ['terminal', 'desktop'] as const) {
-    const ui = await $.ui.mount({ plugin: 'calm', surface, ...PANE })
+    const ui = await $.ui.mount({ plugin: 'my-little-calm', surface, ...PANE })
     expect(await ui.find({ text: /report\.md/ })).toBeDefined()
     await ui.unmount()
   }
@@ -51,7 +51,7 @@ test('the dashboard draws on terminal and desktop', async ($, on) => {
 
 test('picking an accent color sticks', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'calm', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'my-little-calm', surface: 'desktop', ...PANE })
   await ui.press({ key: 'accent-green' })
   expect(await ui.find({ key: 'accent-green' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /made by Sophie/ })).toBeDefined()
@@ -59,7 +59,7 @@ test('picking an accent color sticks', async ($, on) => {
 })
 
 const BAND = {
-  plugin: 'calm',
+  plugin: 'my-little-calm',
   component: 'AbovePrompt' as const,
   props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
 }
@@ -69,7 +69,7 @@ test('a one-line band above the prompt says what is going on', async ($, on) => 
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
-    plugin: 'calm',
+    plugin: 'my-little-calm',
     surface: 'terminal',
     component: 'AbovePrompt',
     props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
@@ -91,7 +91,7 @@ test('the log shows the newest action on top', async ($, on) => {
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo first' })
   await $.tool.call({ tool: 'Bash', command: 'echo second' })
-  const ui = await $.ui.mount({ plugin: 'calm', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'my-little-calm', surface: 'desktop', ...PANE })
   const lines = (await ui.findAll({ type: 'Text', text: /echo (first|second)/ })).map(x => x.text)
   const logLines = lines.filter(t => /✓/.test(t))
   expect(logLines[0]).toContain('second')
@@ -119,7 +119,7 @@ test('a small mark joins the footer mode labels', async ($, on) => {
     const { Text } = $.ui.resolve(e)
     return <Text>{modes.join(' & ')}</Text>
   })
-  const ui = await $.ui.mount({ plugin: 'calm', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
+  const ui = await $.ui.mount({ plugin: 'my-little-calm', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
   expect(modes[0]).toBe('auto')
   expect(modes[1]).toMatch(/Calm/)
   await ui.unmount()

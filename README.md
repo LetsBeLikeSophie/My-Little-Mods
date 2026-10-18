@@ -30,21 +30,21 @@ This repository is public, so anyone can install from it. In Claude Code (termin
 then install the mods you want:
 
 ```
-/plugin install rpg@my-little-mods
+/plugin install my-little-rpg@my-little-mods
 ```
 
 ```
-/plugin install calm@my-little-mods
+/plugin install my-little-calm@my-little-mods
 ```
 
 ```
-/plugin install day@my-little-mods
+/plugin install my-little-day@my-little-mods
 ```
 
 Or in one line from a shell:
 
 ```bash
-claude plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
+claude plugin install my-little-day --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 In the Claude desktop app, where `/plugin` does not run: click **+** next to the prompt box, then **Plugins → Add marketplace** with `LetsBeLikeSophie/My-Little-Mods`, then **Add plugin**.
@@ -53,16 +53,16 @@ Start a new session afterwards, then open a mod with its command.
 
 ## Uninstall
 
-At the prompt (swap `rpg` for `calm` or `day`):
+At the prompt (swap `my-little-rpg` for `my-little-calm` or `my-little-day`):
 
 ```
-/plugin uninstall rpg@my-little-mods
+/plugin uninstall my-little-rpg@my-little-mods
 ```
 
 From a shell:
 
 ```bash
-claude plugin uninstall rpg@my-little-mods
+claude plugin uninstall my-little-rpg@my-little-mods
 ```
 
 To drop the marketplace too: `/plugin marketplace remove my-little-mods`. In the desktop app: **+** next to the prompt box → **Plugins**.
