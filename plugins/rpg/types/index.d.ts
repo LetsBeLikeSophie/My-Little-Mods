@@ -44,7 +44,7 @@ export type Output = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'pixel-activity': {
+    'rpg': {
       acts: Act[]
       turn: Turn
       counts: { [kind: string]: number }

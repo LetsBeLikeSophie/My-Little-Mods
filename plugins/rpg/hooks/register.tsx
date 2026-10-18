@@ -12,33 +12,33 @@ import { PIXEL_FONT } from './font'
 import { JOB_BLURB, JOB_NAMES, SCENES, SPECIES_NAMES, THINK_LINES, TIME_LABELS, UI, ago, untilText, langFrom, picFor, seconds, shoutFor } from './i18n'
 import type { Lang } from './i18n'
 
-const PANE = 'pixel-activity'
-const TITLE = 'Adventure Log'
+const PANE = 'rpg'
+const TITLE = 'RPG'
 
-const acts = atom({ plugin: 'pixel-activity', key: 'acts' } as const, [])
-const turn = atom({ plugin: 'pixel-activity', key: 'turn' } as const, {
+const acts = atom({ plugin: 'rpg', key: 'acts' } as const, [])
+const turn = atom({ plugin: 'rpg', key: 'turn' } as const, {
   isWorking: false,
   startedAt: 0,
   endedAt: null,
   ids: [],
 })
-const counts = atom({ plugin: 'pixel-activity', key: 'counts' } as const, {})
-const files = atom({ plugin: 'pixel-activity', key: 'files' } as const, [])
-const outputs = atom({ plugin: 'pixel-activity', key: 'outputs' } as const, [])
-const species = atom({ plugin: 'pixel-activity', key: 'species' } as const, 'cat')
-const job = atom({ plugin: 'pixel-activity', key: 'job' } as const, 'warrior')
-const show = atom({ plugin: 'pixel-activity', key: 'show' } as const, { legend: false, picker: false })
-const plan = atom({ plugin: 'pixel-activity', key: 'plan' } as const, { items: [], current: -1 })
-const theme = atom({ plugin: 'pixel-activity', key: 'theme' } as const, 'dark')
-const approval = atom({ plugin: 'pixel-activity', key: 'approval' } as const, null)
-const alerts = atom({ plugin: 'pixel-activity', key: 'alerts' } as const, true)
-const life = atom({ plugin: 'pixel-activity', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
-const lang = atom({ plugin: 'pixel-activity', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
-const spent = atom({ plugin: 'pixel-activity', key: 'spent' } as const, {})
-const logOpen = atom({ plugin: 'pixel-activity', key: 'logOpen' } as const, '')
-const limitBase = atom({ plugin: 'pixel-activity', key: 'limitBase' } as const, { five: null, week: null })
-const quota = atom({ plugin: 'pixel-activity', key: 'quota' } as const, { limits: [], contextPct: null, usd: null })
-const now = atom({ plugin: 'pixel-activity', key: 'now' } as const, 0)
+const counts = atom({ plugin: 'rpg', key: 'counts' } as const, {})
+const files = atom({ plugin: 'rpg', key: 'files' } as const, [])
+const outputs = atom({ plugin: 'rpg', key: 'outputs' } as const, [])
+const species = atom({ plugin: 'rpg', key: 'species' } as const, 'cat')
+const job = atom({ plugin: 'rpg', key: 'job' } as const, 'warrior')
+const show = atom({ plugin: 'rpg', key: 'show' } as const, { legend: false, picker: false })
+const plan = atom({ plugin: 'rpg', key: 'plan' } as const, { items: [], current: -1 })
+const theme = atom({ plugin: 'rpg', key: 'theme' } as const, 'dark')
+const approval = atom({ plugin: 'rpg', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'rpg', key: 'alerts' } as const, true)
+const life = atom({ plugin: 'rpg', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
+const lang = atom({ plugin: 'rpg', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
+const spent = atom({ plugin: 'rpg', key: 'spent' } as const, {})
+const logOpen = atom({ plugin: 'rpg', key: 'logOpen' } as const, '')
+const limitBase = atom({ plugin: 'rpg', key: 'limitBase' } as const, { five: null, week: null })
+const quota = atom({ plugin: 'rpg', key: 'quota' } as const, { limits: [], contextPct: null, usd: null })
+const now = atom({ plugin: 'rpg', key: 'now' } as const, 0)
 
 // A quest-log look, in two themes: dark slate or light parchment.
 type Theme = 'dark' | 'light'
@@ -279,9 +279,9 @@ export const register: Register = on => {
       const lg = await read($, lang)
       const isNative = await read($, alerts)
       if (after > before) {
-        void alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { look: { tag: '⚔ RPG', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].levelUpTitle, body: `Lv ${after}`, sound: 'sounds/levelup.wav', isNative })
       } else if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
-        void alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
+        void alertIfShown($, PANE, { look: { tag: '⚔ RPG', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/levelup.wav', isNative })
       }
     }
 
@@ -364,7 +364,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { look: { tag: '⚔ Adventure Log', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: { tag: '⚔ RPG', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }

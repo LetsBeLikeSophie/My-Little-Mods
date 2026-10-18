@@ -1,7 +1,0 @@
-{
-  "name": "simple-dash",
-  "version": "0.1.0",
-  "description": "A minimal side-pane dashboard: what Claude is doing, usage limits, results, time spent and a log",
-  "author": { "name": "Sophie", "url": "https://github.com/LetsBeLikeSophie" },
-  "types": "./types/index.d.ts"
-}

@@ -5,9 +5,9 @@ import { langFrom } from '../hooks/i18n'
 
 const PANE = {
   component: 'Pane',
-  requestId: 'daily-journal',
+  requestId: 'day',
   props: {
-    title: 'Journal',
+    title: 'Day',
     isFocused: false,
     bodyColumns: 40,
     placement: 'dock',
@@ -39,7 +39,7 @@ test('the dashboard draws on terminal and desktop', async ($, on) => {
   on('tool.call', () => ({ result: { type: 'create' } }))
   await $.tool.call({ tool: 'Write', file_path: 'C:\\work\\report.md', content: '# hi' })
   for (const surface of ['terminal', 'desktop'] as const) {
-    const ui = await $.ui.mount({ plugin: 'daily-journal', surface, ...PANE })
+    const ui = await $.ui.mount({ plugin: 'day', surface, ...PANE })
     expect(await ui.find({ text: /report\.md/ })).toBeDefined()
     await ui.unmount()
   }
@@ -47,23 +47,23 @@ test('the dashboard draws on terminal and desktop', async ($, on) => {
 
 test('the journal pane draws with its credit', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'daily-journal', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'day', surface: 'desktop', ...PANE })
   expect(await ui.find({ type: 'Text', text: /made by Sophie/ })).toBeDefined()
   await ui.unmount()
 })
 
 const BAND = {
-  plugin: 'daily-journal',
+  plugin: 'day',
   component: 'AbovePrompt' as const,
   props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
 }
 
 test('a one-line band above the prompt says what is going on', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'day', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
-    plugin: 'daily-journal',
+    plugin: 'day',
     surface: 'terminal',
     component: 'AbovePrompt',
     props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
@@ -81,7 +81,7 @@ test('a pending approval is the status', async () => {
 })
 
 test('the band is left to the mod whose pane is on screen', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'day', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
   on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
     const { Text } = $.ui.resolve(e)
     return <Text>the engine's own</Text>
@@ -93,14 +93,14 @@ test('the band is left to the mod whose pane is on screen', async ($, on) => {
 })
 
 test('a small mark joins the footer mode labels', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'daily-journal', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'day', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   let modes: readonly string[] = []
   on('ui.render', { component: 'SessionMode' }, ($, e) => {
     modes = e.props.modes
     const { Text } = $.ui.resolve(e)
     return <Text>{modes.join(' & ')}</Text>
   })
-  const ui = await $.ui.mount({ plugin: 'daily-journal', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
+  const ui = await $.ui.mount({ plugin: 'day', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
   expect(modes[0]).toBe('auto')
   expect(modes[1]).toMatch(/일지|journal/)
   await ui.unmount()
@@ -108,7 +108,7 @@ test('a small mark joins the footer mode labels', async ($, on) => {
 
 test('the theme button flips between light and dark', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'daily-journal', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'day', surface: 'desktop', ...PANE })
   expect(await ui.find({ key: 'toggle-theme', text: /🌙/ })).toBeDefined()
   await ui.press({ key: 'toggle-theme' })
   expect(await ui.find({ key: 'toggle-theme', text: /☀/ })).toBeDefined()

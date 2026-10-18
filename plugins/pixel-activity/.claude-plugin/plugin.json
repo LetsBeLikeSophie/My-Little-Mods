@@ -1,7 +1,0 @@
-{
-  "name": "pixel-activity",
-  "version": "0.1.0",
-  "description": "A pixel-art RPG camp pane: your hero acts out what Claude is doing right now",
-  "author": { "name": "Sophie", "url": "https://github.com/LetsBeLikeSophie" },
-  "types": "./types/index.d.ts"
-}

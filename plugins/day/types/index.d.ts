@@ -1,7 +1,5 @@
 export type ActKind = 'read' | 'search' | 'edit' | 'write' | 'bash' | 'web' | 'agent' | 'other'
 
-export type Accent = 'blue' | 'green' | 'purple' | 'orange' | 'mono'
-
 /** One tool call. */
 export type Act = {
   id: string
@@ -29,7 +27,7 @@ export type Quota = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'simple-dash': {
+    'day': {
       acts: Act[]
       turn: Turn
       outputs: Output[]
@@ -37,12 +35,12 @@ declare module 'claude-code' {
       quota: Quota
       limitBase: { five: number | null; week: number | null }
       plan: { items: string[]; current: number }
-      accent: Accent
-      theme: 'dark' | 'light'
+      name: string
       lang: 'ko' | 'en'
       logOpen: string
       approval: { id: string; tool: string; since: number } | null
       alerts: boolean
+      theme: 'dark' | 'light'
       life: { quests: number; slain: number; actions: number }
       now: number
     }

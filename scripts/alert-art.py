@@ -37,7 +37,7 @@ def vgrad(w, h, top, bottom):
 
 # ═══ RPG: pixel art, night camp, gold ═══
 def rpg():
-    out = f'{root}/pixel-activity/images'
+    out = f'{root}/rpg/images'
     # logo: a pixel sword on a dark tile with a gold rim, drawn on a 16-cell grid
     px = 8
     logo = Image.new('RGBA', (16 * px, 16 * px), hexc('#1C1A24'))
@@ -95,7 +95,7 @@ ACCENTS = {'blue': '#8FA2F2', 'green': '#78C2A0', 'purple': '#B39BF3', 'orange':
 
 
 def calm():
-    out = f'{root}/simple-dash/images'
+    out = f'{root}/calm/images'
     for name, acc in ACCENTS.items():
         n = 128 * S
         logo = Image.new('RGBA', (n, n), (0, 0, 0, 0))
@@ -134,7 +134,7 @@ def calm():
 
 # ═══ Journal: cream, a smiling sun, soft hills ═══
 def journal():
-    out = f'{root}/daily-journal/images'
+    out = f'{root}/day/images'
     sun, deep, ink = hexc('#FFC94A'), hexc('#F7A928'), hexc('#2B2620')
 
     def face(d, cx, cy, r):

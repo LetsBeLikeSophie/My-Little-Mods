@@ -2,64 +2,72 @@
 
 **English** · [한국어](README.ko.md)
 
-Three small mods for Claude Code's side pane. All three show the same things (what Claude is doing, usage limits, where the time went, results and a log), each in its own style. They show what Claude is doing right now, how much of your usage limits is left, and what it made. From the maker of [My Little Sessions](https://github.com/LetsBeLikeSophie/My-Little-Sessions).
+Three small mods for Claude Code that show what Claude is doing, each in its own style. From the maker of [My Little Sessions](https://github.com/LetsBeLikeSophie/My-Little-Sessions).
 
-| Mod | Looks like |
-| --- | --- |
-| **pixel-activity** (Adventure Log) | A pixel-art RPG camp: your chosen hero acts out each tool Claude uses |
-| **simple-dash** | Calm: airy white cards on a soft tint, thin rings and light type, in an accent color you pick |
-| **daily-journal** | Warm: cream background, a sunny "now" card with a little face, pastel chips and pill charts |
+| Mod | Command | Looks like |
+| --- | --- | --- |
+| **RPG** | `/rpg` | A pixel-art camp: your chosen hero acts out each tool Claude uses |
+| **Calm** | `/calm` | A quiet dashboard: white cards on a soft tint, thin rings, serif titles, one accent color |
+| **Day** | `/day` | A warm journal: the sky of the hour, pastel limit cards, pill charts |
 
-Install any one, or several.
+All three show the same things:
+
+- **Now:** the task, the tool and file, the time it has taken, and a clear sign when Claude waits for your approval
+- **Usage limits:** the 5-hour and weekly limits, with what the last request added, and when they reset
+- **Session memory:** how full the conversation is (it compacts by itself when full)
+- **Where the time went**, **results** (documents and artifacts, with Open buttons), a **log** (newest on top) and **all-time totals**
+- **Alerts:** a Windows notification in the mod's own look and a sound, when Claude needs your approval or finishes a long request (🔔 to turn off)
+- **Around the prompt:** a slim line above it, and a small mark at the right of the footer
 
 ## Install
 
-At the prompt of a Claude Code terminal session:
+Others install straight from this GitHub repository. At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install pixel-activity --marketplace LetsBeLikeSophie/My-Little-Mods
-```
-
-```
-/plugin install simple-dash --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 ```
-/plugin install daily-journal --marketplace LetsBeLikeSophie/My-Little-Mods
+/plugin install calm --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
-The first time, answer `y` to `Add marketplace?`, then pick the user scope.
+```
+/plugin install day --marketplace LetsBeLikeSophie/My-Little-Mods
+```
+
+The first time, answer `y` to `Add marketplace?`, then pick the user scope. Install one, or all three.
 
 From a shell:
 
 ```bash
-claude plugin install pixel-activity --marketplace LetsBeLikeSophie/My-Little-Mods
+claude plugin install rpg --marketplace LetsBeLikeSophie/My-Little-Mods
 ```
 
 In the Claude desktop app, where `/plugin` does not run: click **+** next to the prompt box, then **Plugins → Add marketplace** with `LetsBeLikeSophie/My-Little-Mods`, then **Add plugin**.
 
-## pixel-activity (Adventure Log)
+## Using them
 
-- **Work as pictures:** reading a file is studying a book, editing code is weapon practice, a command is a spell, tests are a slime (bug) hunt. The legend lists them all.
-- **5 classes × 5 species:** warrior, mage, hunter, rogue, priest / human, cat, dog, bear, rabbit. Each class moves its own way.
-- **Usage-limit HUD:** the 5-hour and weekly limits as XP bars; what the last request used glows.
-- **Results, time spent and a log:** links to documents and artifacts, a thinking-vs-work chart, one-line log entries.
-- The sky follows the real time of day. Light and dark themes; Korean or English by system language.
-- **Alerts:** when Claude waits for your approval the hero raises a hand, and after a few seconds a Windows notification and a sound follow; a request that ran 30s or more pings when done. Toggle with the 🔔 button.
-- **Level & XP:** finished requests, slain bugs and actions add up across sessions.
-- Open with `/rpg` · change hero with `/rpg mage cat`
+- A mod opens with its command. A new session reopens only the mod you opened last.
+- With several installed, the line above the prompt, the footer mark and the alerts come from the mod whose pane is on screen, so they never pile up.
+- Korean or English, following the system language.
 
-## simple-dash
+### RPG — `/rpg`
 
-- A status card with a thin line icon, the usage limits as three thin rings (the glowing part = what the last request used), where the time went, results and a log.
-- Accent colors: blue, green, purple, orange, mono. Light and dark.
-- Alerts for approvals and long requests (toggle), and all-time totals.
-- Open with `/calm` · change color with `/calm green`
+- Work as pictures: reading is studying a book, editing is weapon practice, a command is a spell, tests are a bug hunt. 📜 opens the legend.
+- 5 classes × 5 species, each class moving its own way. Change with the class button or `/rpg mage cat`.
+- The limits as XP bars, levels and XP that add up across sessions, a sky that follows the real time of day.
+- Light and dark (☾/☀).
 
-## daily-journal
+### Calm — `/calm`
 
-- A greeting with your name, a sunny "now" card whose little face changes with the status, the limits as pastel chips, a big number beside pill bars of where the time went, results as pastel cards, and a log.
-- Open with `/day` · set your name with `/day name Sophie` (otherwise your git name)
+- A status card with a thin line icon, the limits as three thin rings, serif headlines and numbers.
+- Pick the accent with 🔵🟢🟣🟠⚪ (or `/calm green`); the whole pane takes a soft tint of it. Light and dark.
+
+### Day — `/day`
+
+- A greeting with your name: `/day name Sophie` (otherwise your git name).
+- The "now" card wears the sky of the hour: dawn, day, sunset or night, with a small sun or moon.
+- Pastel limit cards, a big number beside pill charts, results as pastel strips. Light and dark (🌙/☀️).
 
 ## Good to know
 
@@ -69,16 +77,16 @@ In the Claude desktop app, where `/plugin` does not run: click **+** next to the
 
 ## Developing
 
-Code all mods share lives in `shared/` (the bookkeeping in `core.ts`, alerts in `alerts.ts`, the log, Open button, alerts switch and credit in `parts.tsx`). Each mod is installed on its own, so it carries a copy in its `hooks/` folder. Edit the file in `shared/`, then copy it out:
+Code all mods share lives in `shared/` (bookkeeping in `core.ts`, alerts in `alerts.ts`, the log, buttons and pane helpers in `parts.tsx`). Each mod is installed on its own, so it carries a copy in its `hooks/` folder. Edit the file in `shared/`, then copy it out:
 
 ```bash
 node scripts/sync-shared.mjs
 ```
 
-`node scripts/sync-shared.mjs --check` fails if a copy is out of date.
+`node scripts/sync-shared.mjs --check` fails if a copy is out of date. The notification pictures are drawn by `python scripts/alert-art.py plugins`.
 
 ## License
 
-Code: [MIT](LICENSE). The pixel font [Galmuri11](https://github.com/quiple/galmuri) bundled in pixel-activity is under the SIL Open Font License 1.1 ([OFL-Galmuri.txt](plugins/pixel-activity/OFL-Galmuri.txt)).
+Code: [MIT](LICENSE). The pixel font [Galmuri11](https://github.com/quiple/galmuri) bundled in RPG is under the SIL Open Font License 1.1 ([OFL-Galmuri.txt](plugins/rpg/OFL-Galmuri.txt)).
 
 made by Sophie

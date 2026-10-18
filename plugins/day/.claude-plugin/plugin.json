@@ -1,0 +1,10 @@
+{
+  "name": "day",
+  "version": "1.0.0",
+  "description": "Day: a warm journal with the sky of the hour, pastel limit cards and pill charts",
+  "author": {
+    "name": "Sophie",
+    "url": "https://github.com/LetsBeLikeSophie"
+  },
+  "types": "./types/index.d.ts"
+}

@@ -1,67 +1,78 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderChildren, SessionRateLimit, Timer } from 'claude-code'
 
-import type { Act, Output, Quota, Turn } from '../types'
+import type { Accent, Act, Output, Quota, Turn } from '../types'
 import {
   DOC_EXT,
   artifactIn,
+  barCells,
   baseName,
   busyMs,
   detailOf,
   gainText,
   isCheckCommand,
   kindOf,
+  lighten,
   nextPlan,
   pctOf,
   statusOf,
   toolName,
 } from './core'
-import { STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
+import { ACCENT_NAMES, STATUS, TIME_LABELS, UI, ago, langFrom, seconds, untilText } from './i18n'
 import type { Lang } from './i18n'
 import { AlertsButton, Credit, LogLines, OpenButton, alertIfShown, isPaneShown, rememberLast, wasLast } from './parts'
-import { J, PAPERS, bandSvg, greetingSvg, headingSvg, nowSvg, skyOf, statsSvg } from './journal'
-import type { IconKind } from './journal'
+import { bandSvg, headingSvg, ringsSvg, statusSvg, timeSvg } from './calm'
+import type { Palette } from './calm'
 
-const PANE = 'daily-journal'
-const TITLE = 'Journal'
+const PANE = 'calm'
+const TITLE = 'Calm'
+const BAR = 16
 
-const acts = atom({ plugin: 'daily-journal', key: 'acts' } as const, [])
-const turn = atom({ plugin: 'daily-journal', key: 'turn' } as const, { isWorking: false, startedAt: 0, endedAt: null, ids: [] })
-const outputs = atom({ plugin: 'daily-journal', key: 'outputs' } as const, [])
-const spent = atom({ plugin: 'daily-journal', key: 'spent' } as const, {})
-const quota = atom({ plugin: 'daily-journal', key: 'quota' } as const, { limits: [], contextPct: null })
-const limitBase = atom({ plugin: 'daily-journal', key: 'limitBase' } as const, { five: null, week: null })
-const plan = atom({ plugin: 'daily-journal', key: 'plan' } as const, { items: [], current: -1 })
-const name = atom({ plugin: 'daily-journal', key: 'name' } as const, '')
-const lang = atom({ plugin: 'daily-journal', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
-const logOpen = atom({ plugin: 'daily-journal', key: 'logOpen' } as const, '')
-const now = atom({ plugin: 'daily-journal', key: 'now' } as const, 0)
-const approval = atom({ plugin: 'daily-journal', key: 'approval' } as const, null)
-const alerts = atom({ plugin: 'daily-journal', key: 'alerts' } as const, true)
-const theme = atom({ plugin: 'daily-journal', key: 'theme' } as const, 'light')
-const life = atom({ plugin: 'daily-journal', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
+const acts = atom({ plugin: 'calm', key: 'acts' } as const, [])
+const turn = atom({ plugin: 'calm', key: 'turn' } as const, { isWorking: false, startedAt: 0, endedAt: null, ids: [] })
+const outputs = atom({ plugin: 'calm', key: 'outputs' } as const, [])
+const spent = atom({ plugin: 'calm', key: 'spent' } as const, {})
+const quota = atom({ plugin: 'calm', key: 'quota' } as const, { limits: [], contextPct: null })
+const limitBase = atom({ plugin: 'calm', key: 'limitBase' } as const, { five: null, week: null })
+const plan = atom({ plugin: 'calm', key: 'plan' } as const, { items: [], current: -1 })
+const accent = atom({ plugin: 'calm', key: 'accent' } as const, 'blue')
+const theme = atom({ plugin: 'calm', key: 'theme' } as const, 'dark')
+const lang = atom({ plugin: 'calm', key: 'lang' } as const, langFrom(Intl.DateTimeFormat().resolvedOptions().locale) ?? 'en')
+const logOpen = atom({ plugin: 'calm', key: 'logOpen' } as const, '')
+const now = atom({ plugin: 'calm', key: 'now' } as const, 0)
+const approval = atom({ plugin: 'calm', key: 'approval' } as const, null)
+const alerts = atom({ plugin: 'calm', key: 'alerts' } as const, true)
+const life = atom({ plugin: 'calm', key: 'life' } as const, { quests: 0, slain: 0, actions: 0 })
 
 type Life = { quests: number; slain: number; actions: number }
 const LONG_TURN_MS = 30_000
 const APPROVAL_ALERT_MS = 4_000
 
-/** The person's name for the greeting: what they set, else git's user.name. */
-async function guessName($: EngineInterface): Promise<string> {
-  const saved = await $.store.get('name')
-  if (typeof saved === 'string' && saved) return saved
-  const r = await $.process.run(['git', 'config', '--global', 'user.name'], { timeoutMs: 5000 }).catch(() => undefined)
-  return r && r.exitCode === 0 ? r.stdout.trim().split(/\s+/)[0] ?? '' : ''
+// Soft, airy accents: one per dashboard, on its circle, rings and bars.
+export const ACCENTS: { [K in Accent]: string } = {
+  blue: '#8FA2F2',
+  green: '#78C2A0',
+  purple: '#B39BF3',
+  orange: '#F2AE72',
+  mono: '#A3A8B4',
+}
+const ACCENT_IDS = Object.keys(ACCENTS) as Accent[]
+/** The notification dressed in the chosen color: its leaf logo and soft rings. */
+async function calmLook($: EngineInterface) {
+  const ac = await read($, accent)
+  return { tag: '🍃 Calm', logo: `images/logo-${ac}.png`, hero: `images/hero-${ac}.png` }
 }
 
-/** "10월 17일 금요일 · 오후" / "Fri, Oct 17 · Afternoon". */
-function dateLine(lg: Lang, at: number): string {
-  const d = new Date(at)
-  const h = d.getHours()
-  const part = lg === 'ko'
-    ? h < 12 ? '오전' : h < 18 ? '오후' : '저녁'
-    : h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'
-  const day = d.toLocaleDateString(lg === 'ko' ? 'ko-KR' : 'en-US', lg === 'ko' ? { month: 'long', day: 'numeric', weekday: 'long' } : { weekday: 'short', month: 'short', day: 'numeric' })
-  return `${day} · ${part}`
+// Colored emoji keep their color inside the app's native buttons.
+const SWATCH: { [K in Accent]: string } = { blue: '🔵', green: '🟢', purple: '🟣', orange: '🟠', mono: '⚪' }
+
+const THEMES = {
+  dark: { BG: '#141620', CARD: '#1F2330', FG: '#E8EAF0', DIM: '#8E95A6', EMPTY: '#2C3142', RED: '#F28B8B' },
+  light: { BG: '#EEF0F8', CARD: '#FFFFFF', FG: '#2B2D33', DIM: '#8A8F9C', EMPTY: '#EEF0F7', RED: '#D9534F' },
+} as const
+
+function isAccent(v: unknown): v is Accent {
+  return typeof v === 'string' && (ACCENT_IDS as string[]).includes(v)
 }
 
 function quotaFrom(u: { rateLimits: readonly SessionRateLimit[]; context: { percent?: number } }): Quota {
@@ -93,12 +104,13 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'day', description: `${UI.ko.command} / ${UI.en.command}` })
-    void guessName($).then(n => update($, name, () => n)).catch(() => undefined)
-    const savedAlerts = await $.store.get('alerts')
-    if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
+    await $.command.register({ name: 'calm', description: `${UI.ko.command} / ${UI.en.command}` })
+    const savedAccent = await $.store.get('accent')
+    if (isAccent(savedAccent)) await update($, accent, () => savedAccent)
     const savedTheme = await $.store.get('theme')
     if (savedTheme === 'dark' || savedTheme === 'light') await update($, theme, () => savedTheme)
+    const savedAlerts = await $.store.get('alerts')
+    if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
     const savedLife = (await $.store.get('life')) as Life | undefined
     if (savedLife && typeof savedLife.quests === 'number') await update($, life, () => savedLife)
     await update($, approval, () => null)
@@ -111,18 +123,17 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'day' }, async ($, e) => {
+  on('command.run', { command: 'calm' }, async ($, e) => {
     const lg = await read($, lang)
-    const m = /^name\s+(.+)$/i.exec(e.args.trim())
-    const who = m?.[1]?.trim().slice(0, 24) ?? ''
-    if (who) {
-      await update($, name, () => who)
-      await $.store.set('name', who)
+    const want = e.args.trim()
+    if (isAccent(want)) {
+      await update($, accent, () => want)
+      await $.store.set('accent', want)
     }
     await $.ui.open({ id: PANE, title: TITLE })
     await rememberLast($, PANE)
 
-    return { text: who ? UI[lg].named(who) : UI[lg].opened }
+    return { text: isAccent(want) ? UI[lg].colored(ACCENT_NAMES[lg][want]) : UI[lg].opened }
   })
 
   on('turn.start', async ($, e, next) => {
@@ -160,7 +171,7 @@ export const register: Register = on => {
       await $.store.set('life', l)
       if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
         const lg = await read($, lang)
-        void alertIfShown($, PANE, { look: { tag: '🌼 Journal', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
+        void alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
       }
     }
 
@@ -230,7 +241,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { look: { tag: '🌼 Journal', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: await calmLook($), title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }
@@ -248,13 +259,11 @@ export const register: Register = on => {
   })
 
   // One line above the prompt: the status and the usage limits, so it still shows
-  // with the pane closed. Plain text in the app's own colors, a sunny dot in front.
+  // with the pane closed. Plain text in the app's own colors, the accent on the dot.
   // A small mark of this mod beside the footer's mode labels, while its pane is on screen.
   on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
     if (!(await isPaneShown($, PANE))) return next(e)
-    const who = await read($, name)
-    const lg = await read($, lang)
-    const label = who ? (lg === 'ko' ? `🌼 ${who}의 일지` : `🌼 ${who}'s journal`) : lg === 'ko' ? '🌼 오늘의 일지' : "🌼 Today's journal"
+    const label = `${SWATCH[await read($, accent)]} Calm`
     return next({ ...e, props: { ...e.props, modes: [...e.props.modes, label] } })
   })
 
@@ -265,6 +274,7 @@ export const register: Register = on => {
     const list = await read($, acts)
     const t = await read($, turn)
     const lg = await read($, lang)
+    const ac = await read($, accent)
     const qt = await read($, quota)
     const base = await read($, limitBase)
     const at = Math.max(await read($, now), Date.now())
@@ -278,15 +288,19 @@ export const register: Register = on => {
       .filter(Boolean)
       .join('  ')
     const detail = live ? `${toolName(live.tool)}${live.detail ? ` ${live.detail}` : ''}` : ''
+      const th = await read($, theme)
+      const { CARD, FG, DIM, EMPTY } = THEMES[th]
+      const A = ACCENTS[ac]
+      const pal: Palette = { card: CARD, ink: FG, soft: DIM, track: EMPTY, accent: A, glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55), rim: A }
       const { Svg } = $.ui.resolve(e)
-      return <Svg source={bandSvg({ status, what: STATUS[lg][status], detail, limits })} alt={[STATUS[lg][status], detail, limits].filter(Boolean).join(' · ')} />
+      return <Svg source={bandSvg({ what: STATUS[lg][status], detail, limits }, pal, status === 'approval')} alt={[STATUS[lg][status], detail, limits].filter(Boolean).join(' · ')} />
     }
     const { Box, Text } = $.ui.resolve(e)
 
     return (
       <Box flexDirection="row" gap={1}>
         <Text>
-          <Text color={J.sunDeep}>●</Text> {STATUS[lg][status]}
+          <Text color={ac === 'mono' ? undefined : ACCENTS[ac]}>●</Text> {STATUS[lg][status]}
         </Text>
         {live && (
           <Text dimColor wrap="truncate-end">
@@ -316,13 +330,28 @@ export const register: Register = on => {
     const qt = await read($, quota)
     const base = await read($, limitBase)
     const pl = await read($, plan)
-    const who = await read($, name)
+    const ac = await read($, accent)
+    const th = await read($, theme)
     const lg = await read($, lang)
     const opened = await read($, logOpen)
     const lifeNow = await read($, life)
     const isAlerting = await read($, alerts)
     const tick = await read($, now)
     const L = UI[lg]
+    const { CARD, FG, DIM, EMPTY, RED } = THEMES[th]
+    const A = ACCENTS[ac]
+    const pal: Palette = {
+      card: CARD,
+      ink: FG,
+      soft: DIM,
+      track: EMPTY,
+      accent: A,
+      glow: th === 'dark' ? lighten(A, -0.45) : lighten(A, 0.55),
+      rim: A,
+    }
+    // The theme color washes the whole ground; the cards sit on it, plain and borderless.
+    const TINT = th === 'dark' ? lighten(A, -0.84) : lighten(A, 0.8)
+
     const at = Math.max(tick, Date.now())
     const status = statusOf(t, list, at, (await read($, approval)) !== null)
     const live = [...list].reverse().find(a => a.endedAt === null)
@@ -353,162 +382,110 @@ export const register: Register = on => {
       )
     }
 
-    const th = await read($, theme)
-    const pp = PAPERS[th]
     const E = $.ui.resolve(e)
     const { Box, Text, Button, Svg } = E
-    const PASTELS = [pp.pink, pp.lilac, pp.mint] as const
-    // Every card alike: white, the same small corner and the same inset on all four sides; the title in serif.
-    // Every card alike: white paper, the same shape and inset; a small colored dot by the title.
-    const card = (key: string, title: string, children: RenderChildren, kind?: IconKind) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
-        {title && <Svg source={headingSvg(title, pp, kind)} alt={title} />}
+    const card = (key: string, title: string, children: RenderChildren) => (
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={CARD}>
+        <Svg source={headingSvg(title, pal)} alt={title} />
         {children}
       </Box>
     )
-    const chip = (kind: 'five_hour' | 'seven_day', bg: string, ink: string) => {
+    const ring = (kind: 'five_hour' | 'seven_day') => {
       const q = qt.limits.find(l => l.kind === kind)
       const reset = q?.resetsAt ? Date.parse(q.resetsAt) - at : NaN
       const pct = q ? q.percentUsed : null
+      const b = kind === 'five_hour' ? base.five : base.week
       return {
-        key: kind,
-        title: kind === 'five_hour' ? L.five : L.week,
-        value: pct === null ? '–' : `${Math.round(pct)}%`,
-        tag: gainText(pct, kind === 'five_hour' ? base.five : base.week),
+        label: kind === 'five_hour' ? L.five : L.week,
+        pct,
+        base: b,
+        gain: gainText(pct, b),
         note: Number.isFinite(reset) ? `↻ ${untilText(lg, reset)}` : '',
-        bg,
-        ink,
       }
     }
-    const chips = [
-      chip('five_hour', pp.pink, J.pinkInk),
-      chip('seven_day', pp.lilac, J.lilacInk),
-      {
-        key: 'session',
-        title: L.session,
-        value: qt.contextPct === null ? '–' : `${Math.round(qt.contextPct)}%`,
-        tag: '',
-        note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote,
-        bg: pp.mint,
-        ink: J.mintInk,
-      },
-    ]
-    const sky = skyOf(new Date(at).getHours())
-    const mainActs = list.filter(a => !a.isSub).length
-    const pills = timeRows.slice(0, 4).map(([k, ms]) => ({ label: TIME_LABELS[lg][k] ?? k, pct: Math.round((ms / timeTotal) * 100) }))
-    const isResting = status === 'waiting' || status === 'done'
+    const label =
+      status === 'approval'
+        ? L.askNow
+        : t.startedAt && t.isWorking
+          ? `${L.now} · ${seconds(lg, elapsed)}`
+          : t.startedAt
+            ? `${L.last} · ${seconds(lg, elapsed)}`
+            : L.now
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={pp.cream} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
-        <Svg source={greetingSvg(who ? L.greet : L.hello(''), who, dateLine(lg, at), (who[0] ?? '☺').toUpperCase(), pp)} alt={L.hello(who)} />
-
-        {/* What is happening now, on the sky of the hour. */}
-        <Box key="now" flexDirection="column" padding="md" backgroundColor={sky.bg} borderStyle="round" borderColor={sky.bg}>
-          <Svg
-            source={nowSvg(
-              {
-                status,
-                label: status === 'approval' ? L.askNow : t.isWorking ? L.now : L.last,
-                title: STATUS[lg][status],
-                detail: sub || (isResting ? L.restLine : ''),
-                tag: t.startedAt ? (t.isWorking ? L.tagTyping(seconds(lg, elapsed)) : seconds(lg, elapsed)) : '',
-              },
-              sky,
-            )}
-            alt={`${STATUS[lg][status]} ${sub}`}
-          />
-        </Box>
-
-        {/* The usage limits: three pastel cards, the same inset as every other card. */}
-        <Box key="limits" flexDirection="row" gap="sm">
-          {chips.map(c => (
-            <Box key={`chip-${c.key}`} flexDirection="column" gap="xs" flexGrow={1} flexShrink={1} width="33%" padding="md" backgroundColor={c.bg} borderStyle="round" borderColor={c.bg}>
-              <Text size="footnote" weight="semibold" color={pp.ink}>
-                {c.title}
-              </Text>
-              <Text size="title" weight="bold" color={pp.ink}>
-                {c.value}
-              </Text>
-              {c.tag ? (
-                <Text size="caption" weight="bold" color={c.ink}>
-                  {c.tag}
-                </Text>
-              ) : (
-                <Text size="caption" color={pp.soft} wrap="truncate-end">
-                  {c.note || ' '}
-                </Text>
-              )}
-            </Box>
-          ))}
-        </Box>
-
-        {card(
-          'stats',
-          L.statsTitle,
-          <Svg source={statsSvg(String(mainActs), L.statsCaption, pills, L.timeEmpty, pp)} alt={`${L.statsTitle}: ${pills.map(x => `${x.label} ${x.pct}%`).join(', ')}`} />,
-          'clock',
-        )}
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
+        <Svg source={statusSvg({ status, label, headline: STATUS[lg][status], detail: sub }, pal)} alt={`${STATUS[lg][status]} ${sub}`} />
+        <Svg
+          source={ringsSvg(
+            [ring('five_hour'), ring('seven_day'), { label: L.session, pct: qt.contextPct, note: (qt.contextPct ?? 0) >= 80 ? L.compactSoon : L.compactNote }],
+            pal,
+          )}
+          alt={L.limits}
+        />
+        <Svg
+          source={timeSvg(
+            L.time,
+            timeRows.slice(0, 5).map(([k, ms]) => ({ label: TIME_LABELS[lg][k] ?? k, ms, text: `${seconds(lg, ms)} · ${Math.round((ms / timeTotal) * 100)}%` })),
+            pal,
+            L.timeEmpty,
+          )}
+          alt={L.time}
+        />
 
         {card(
           'results',
           L.results,
           made.length === 0 ? (
-            <Text size="footnote" color={pp.soft}>
+            <Text size="footnote" color={DIM}>
               {L.resultsEmpty}
             </Text>
           ) : (
-            <Box flexDirection="column" gap="xs">
+            <Box flexDirection="column">
               {made.slice(0, 4).map((o, i) => (
-                /* One thin pastel strip per result: title, when and kind on a single line. */
-                <Box
-                  key={o.href}
-                  flexDirection="row"
-                  gap="sm"
-                  alignItems="center"
-                  paddingX="sm"
-                  backgroundColor={PASTELS[i % PASTELS.length]}
-                  borderStyle="round"
-                  borderColor={PASTELS[i % PASTELS.length]}
-                >
-                  <Box flexGrow={1} flexShrink={1}>
-                    <Text size="footnote" weight="semibold" color={pp.ink} wrap="truncate-end">
-                      {o.title}
-                    </Text>
-                  </Box>
-                  <Text size="footnote" color={pp.soft}>
-                    {ago(lg, at - o.at)} · {o.kind === 'artifact' ? (lg === 'ko' ? '아티팩트' : 'Artifact') : lg === 'ko' ? '파일' : 'File'}
+                <Box key={o.href} flexDirection="row" gap="sm" alignItems="center">
+                  {/* A desktop Button is native and ignores the color inside it: themed text plus an Open button. */}
+                  <Text color={i === 0 ? A : FG} wrap="truncate-end">
+                    {o.title}
+                  </Text>
+                  <Text size="footnote" color={DIM}>
+                    {ago(lg, at - o.at)}
                   </Text>
                   {OpenButton(E, $, o.href, L.open, `open-${i}`)}
                 </Box>
               ))}
             </Box>
           ),
-          'star',
         )}
 
         {card(
           'log',
           L.log,
-          LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: pp.ink, soft: pp.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
-          'note',
+          LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: FG, soft: DIM, error: RED }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
         )}
 
         {card(
           'totals',
           L.totals,
-          <Text size="footnote" color={pp.ink}>
+          <Text mono size="footnote" color={FG}>
             {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
           </Text>,
-          'flower',
         )}
 
-        {/* The settings strip: the bell and the night switch at the left, the maker at the right. */}
-        <Box flexDirection="row" gap="sm" alignItems="center" flexWrap="wrap" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
-          {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
-              const next = !isAlerting
-              await update($, alerts, () => next)
-              await $.store.set('alerts', next)
-            })}
+        {/* Quiet settings on a card like the others: color buttons, glyph buttons, then the maker. */}
+        <Box flexDirection="row" gap="sm" flexWrap="wrap" alignItems="center" padding="md" backgroundColor={CARD} borderStyle="round" borderColor={CARD}>
+          {/* One button per color, the emoji drawn in that color: a tap picks it. */}
+          {ACCENT_IDS.map(id => (
+            <Button
+              key={`accent-${id}`}
+              variant={id === ac ? 'primary' : 'secondary'}
+              onPress={async () => {
+                await update($, accent, () => id)
+                await $.store.set('accent', id)
+              }}
+            >
+              {SWATCH[id]}
+            </Button>
+          ))}
           <Button
             key="toggle-theme"
             variant="secondary"
@@ -518,11 +495,14 @@ export const register: Register = on => {
               await $.store.set('theme', next)
             }}
           >
-            {th === 'dark' ? '☀️' : '🌙'}
+            {th === 'dark' ? '☀' : '☾'}
           </Button>
-          {/* the maker at the far right */}
-          <Box flexGrow={1} />
-          {Credit(E, $, L.madeBy, pp.soft)}
+          {AlertsButton(E, isAlerting, { on: '🔔', off: '🔕' }, async () => {
+            const next = !isAlerting
+            await update($, alerts, () => next)
+            await $.store.set('alerts', next)
+          })}
+          {Credit(E, $, L.madeBy, DIM)}
         </Box>
       </Box>
     )

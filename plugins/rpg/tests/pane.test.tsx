@@ -11,9 +11,9 @@ import type { Scene } from '../hooks/camp'
 
 const PANE = {
   component: 'Pane',
-  requestId: 'pixel-activity',
+  requestId: 'rpg',
   props: {
-    title: 'Adventure Log',
+    title: 'RPG',
     isFocused: false,
     bodyColumns: 40,
     placement: 'dock',
@@ -65,7 +65,7 @@ test('the pane says what just ran and links a new document', async ($, on) => {
   await $.tool.call({ tool: 'Write', file_path: 'C:\\work\\report.md', content: '# hi' })
 
   for (const surface of ['terminal', 'desktop'] as const) {
-    const ui = await $.ui.mount({ plugin: 'pixel-activity', surface, ...PANE })
+    const ui = await $.ui.mount({ plugin: 'rpg', surface, ...PANE })
     expect(await ui.find({ text: /report\.md/ })).toBeDefined()
     await ui.unmount()
   }
@@ -73,7 +73,7 @@ test('the pane says what just ran and links a new document', async ($, on) => {
 
 test('picking a class and species redraws the hero', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', ...PANE })
   await ui.press({ key: 'toggle-picker' })
   await ui.press({ key: 'job-mage' })
   await ui.press({ key: 'sp-rabbit' })
@@ -114,7 +114,7 @@ test('the thinking bubble says the step in progress', async () => {
 
 test('the theme button flips between dark and light', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', ...PANE })
   expect(await ui.find({ key: 'toggle-theme', text: /☀/ })).toBeDefined()
   await ui.press({ key: 'toggle-theme' })
   expect(await ui.find({ key: 'toggle-theme', text: /☾/ })).toBeDefined()
@@ -179,7 +179,7 @@ test('the legend shows a still of every scene', async ($, on) => {
     expect(svg).not.toContain('<animate')
     expect(svg.length).toBeLessThan(131072)
   }
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', ...PANE })
   await ui.press({ key: 'toggle-legend' })
   expect((await ui.findAll({ type: 'Svg' })).length).toBeGreaterThan(SCENE_IDS.length)
   await ui.unmount()
@@ -197,7 +197,7 @@ test('a log line opens to its whole text on a click', async ($, on) => {
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   const long = 'npx some-really-long-command --with --many --flags --that --go --on --and --on --past --the --edge'
   await $.tool.call({ tool: 'Bash', command: long })
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', ...PANE })
   const line = await ui.find({ type: 'Text', text: /some-really-long/ })
   expect(line?.text).not.toContain('--edge')
   await ui.press({ key: 'log-toggle' })
@@ -222,24 +222,24 @@ test('a request shows what it used of the limits, XP-style', async () => {
 
 test('the maker credit is a button to the GitHub page', async ($, on) => {
   mock.store(on)
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', ...PANE })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', ...PANE })
   expect(await ui.find({ type: 'Text', text: /made by Sophie/ })).toBeDefined()
   expect(await ui.find({ key: 'credit-link' })).toBeDefined()
   await ui.unmount()
 })
 
 const BAND = {
-  plugin: 'pixel-activity',
+  plugin: 'rpg',
   component: 'AbovePrompt' as const,
   props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
 }
 
 test('a one-line band above the prompt says what is going on', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'rpg', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.call', () => ({ result: { stdout: '', stderr: '', interrupted: false } }))
   await $.tool.call({ tool: 'Bash', command: 'echo hi' })
   const term = await $.ui.mount({
-    plugin: 'pixel-activity',
+    plugin: 'rpg',
     surface: 'terminal',
     component: 'AbovePrompt',
     props: { hasSurvey: false, isWorking: false, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
@@ -267,12 +267,12 @@ test('XP adds up to levels that each ask a little more', async () => {
 })
 
 test('an ask from the engine shows as waiting for approval', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'rpg', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   on('tool.check', () => ({ decision: 'ask' }))
   const v = await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' }, tool_use_id: 't1' })
   expect(v.decision).toBe('ask')
   const ui = await $.ui.mount({
-    plugin: 'pixel-activity',
+    plugin: 'rpg',
     surface: 'terminal',
     component: 'AbovePrompt',
     props: { hasSurvey: false, isWorking: true, maxRows: 4, bodyColumns: 60, scroll: { offset: 0, bodyRows: 4 }, view: {} },
@@ -282,7 +282,7 @@ test('an ask from the engine shows as waiting for approval', async ($, on) => {
 })
 
 test('the band is left to the mod whose pane is on screen', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'rpg', title: '', isShown: false, isFocused: false, isPlaced: true }] }))
   on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
     const { Text } = $.ui.resolve(e)
     return <Text>the engine's own</Text>
@@ -294,14 +294,14 @@ test('the band is left to the mod whose pane is on screen', async ($, on) => {
 })
 
 test('a small mark joins the footer mode labels', async ($, on) => {
-  on('ui.panes', () => ({ value: [{ id: 'pixel-activity', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
+  on('ui.panes', () => ({ value: [{ id: 'rpg', title: '', isShown: true, isFocused: false, isPlaced: true }] }))
   let modes: readonly string[] = []
   on('ui.render', { component: 'SessionMode' }, ($, e) => {
     modes = e.props.modes
     const { Text } = $.ui.resolve(e)
     return <Text>{modes.join(' & ')}</Text>
   })
-  const ui = await $.ui.mount({ plugin: 'pixel-activity', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
+  const ui = await $.ui.mount({ plugin: 'rpg', surface: 'desktop', component: 'SessionMode', props: { modes: ['auto'] } })
   expect(modes[0]).toBe('auto')
   expect(modes[1]).toMatch(/Lv 1/)
   await ui.unmount()

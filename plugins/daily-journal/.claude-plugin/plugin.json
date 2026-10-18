@@ -1,7 +1,0 @@
-{
-  "name": "daily-journal",
-  "version": "0.1.0",
-  "description": "A warm journal-style pane: a sunny now card, pastel limit chips, a big number and pill charts",
-  "author": { "name": "Sophie", "url": "https://github.com/LetsBeLikeSophie" },
-  "types": "./types/index.d.ts"
-}

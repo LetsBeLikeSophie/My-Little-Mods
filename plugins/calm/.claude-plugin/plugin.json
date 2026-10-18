@@ -1,0 +1,10 @@
+{
+  "name": "calm",
+  "version": "1.0.0",
+  "description": "Calm: a quiet dashboard with thin rings, serif titles and one accent color of your choice",
+  "author": {
+    "name": "Sophie",
+    "url": "https://github.com/LetsBeLikeSophie"
+  },
+  "types": "./types/index.d.ts"
+}

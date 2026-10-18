@@ -1,0 +1,10 @@
+{
+  "name": "rpg",
+  "version": "1.0.0",
+  "description": "RPG: a pixel-art camp where your chosen hero acts out what Claude is doing",
+  "author": {
+    "name": "Sophie",
+    "url": "https://github.com/LetsBeLikeSophie"
+  },
+  "types": "./types/index.d.ts"
+}
