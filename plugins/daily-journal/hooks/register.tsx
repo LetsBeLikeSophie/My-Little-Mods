@@ -438,13 +438,13 @@ export const register: Register = on => {
               ))}
             </Box>
           ),
-          pp.butter,
         )}
 
         {card(
           'log',
           L.log,
           LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: pp.ink, soft: pp.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
+          pp.butter,
         )}
 
         {card(
