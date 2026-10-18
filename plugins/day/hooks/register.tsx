@@ -32,8 +32,8 @@ import type { IconKind } from './journal'
 
 const MAKER_URL = 'https://github.com/LetsBeLikeSophie/My-Little-Mods'
 
-/** How a mod dresses its notification: its name, and pictures shipped with it (paths under the mod's folder). */
-type AlertLook = { tag: string; logo?: string; hero?: string }
+/** How a mod dresses its notification: its name and its small round logo (a path under the mod's folder). */
+type AlertLook = { tag: string; logo?: string }
 
 type Alert = { title: string; body: string; sound?: string; isNative: boolean; look?: AlertLook }
 
@@ -43,8 +43,9 @@ function fileUrl($: EngineInterface, rel: string): string {
 }
 
 /**
- * Getting the person's attention: an in-app toast always; then a Windows
- * notification in the mod's look with its sound (one PowerShell run), or the
+ * Getting the person's attention: an in-app toast always; then a small Windows
+ * notification (what happened, with the mod's logo) and its sound in one
+ * PowerShell run, or the
  * engine's own notification and sound elsewhere.
  */
 async function alert($: EngineInterface, a: Alert): Promise<void> {
@@ -55,13 +56,12 @@ async function alert($: EngineInterface, a: Alert): Promise<void> {
     if (a.sound) await $.audio.play({ asset: a.sound }).catch(() => undefined)
     return
   }
-  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml(\'<toast><visual><binding template="ToastGeneric"><text/><text/></binding></visual></toast>\'); $b = $d.GetElementsByTagName(\'binding\').Item(0); $x = $d.GetElementsByTagName(\'text\'); $x.Item(0).AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $x.Item(1).AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement(\'text\'); $e.SetAttribute(\'placement\', \'attribution\'); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'appLogoOverride\'); $e.SetAttribute(\'hint-crop\', \'circle\'); $e.SetAttribute(\'src\', $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_HERO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'hero\'); $e.SetAttribute(\'src\', $env:MLM_HERO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement(\'audio\'); $e.SetAttribute(\'silent\', \'true\'); $d.DocumentElement.AppendChild($e) | Out-Null }; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe\').Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
+  await $.process.run(['powershell', '-NoProfile', '-Command', '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $d = New-Object Windows.Data.Xml.Dom.XmlDocument; $d.LoadXml(\'<toast><visual><binding template="ToastGeneric"><text/><text/></binding></visual></toast>\'); $b = $d.GetElementsByTagName(\'binding\').Item(0); $x = $d.GetElementsByTagName(\'text\'); $x.Item(0).AppendChild($d.CreateTextNode($env:MLM_TITLE)) | Out-Null; $x.Item(1).AppendChild($d.CreateTextNode($env:MLM_BODY)) | Out-Null; if ($env:MLM_TAG) { $e = $d.CreateElement(\'text\'); $e.SetAttribute(\'placement\', \'attribution\'); $e.AppendChild($d.CreateTextNode($env:MLM_TAG)) | Out-Null; $b.AppendChild($e) | Out-Null }; if ($env:MLM_LOGO) { $e = $d.CreateElement(\'image\'); $e.SetAttribute(\'placement\', \'appLogoOverride\'); $e.SetAttribute(\'hint-crop\', \'circle\'); $e.SetAttribute(\'src\', $env:MLM_LOGO); $b.AppendChild($e) | Out-Null }; if ($env:MLM_WAV) { $e = $d.CreateElement(\'audio\'); $e.SetAttribute(\'silent\', \'true\'); $d.DocumentElement.AppendChild($e) | Out-Null }; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe\').Show([Windows.UI.Notifications.ToastNotification]::new($d)); if ($env:MLM_WAV) { (New-Object Media.SoundPlayer $env:MLM_WAV).PlaySync() }'], {
       env: {
         MLM_TITLE: a.title,
         MLM_BODY: a.body,
         MLM_TAG: a.look?.tag ?? '',
         MLM_LOGO: a.look?.logo ? fileUrl($, a.look.logo) : '',
-        MLM_HERO: a.look?.hero ? fileUrl($, a.look.hero) : '',
         MLM_WAV: a.sound ? `${$.plugin.root}\\${a.sound.replace(/\//g, '\\')}` : '',
       },
       timeoutMs: 15_000,
@@ -255,7 +255,7 @@ export const register: Register = on => {
       await $.store.set('life', l)
       if (t.startedAt && end - t.startedAt >= LONG_TURN_MS) {
         const lg = await read($, lang)
-        void alertIfShown($, PANE, { look: { tag: '🌼 Day', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
+        void alertIfShown($, PANE, { look: { tag: '🌼 Day', logo: 'images/logo.png' }, title: UI[lg].doneTitle, body: UI[lg].doneBody(seconds(lg, end - t.startedAt)), sound: 'sounds/done.wav', isNative: await read($, alerts) })
       }
     }
 
@@ -325,7 +325,7 @@ export const register: Register = on => {
           const still = await read($, approval)
           if (still?.id !== id) return
           const lg = await read($, lang)
-          await alertIfShown($, PANE, { look: { tag: '🌼 Day', logo: 'images/logo.png', hero: 'images/hero.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
+          await alertIfShown($, PANE, { look: { tag: '🌼 Day', logo: 'images/logo.png' }, title: UI[lg].approvalTitle, body: UI[lg].approvalBody(toolName(e.tool)), sound: 'sounds/attention.wav', isNative: await read($, alerts) })
         })()
       })
     }
