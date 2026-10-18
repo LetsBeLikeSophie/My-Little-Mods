@@ -104,7 +104,7 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'calm', description: `${UI.ko.command} / ${UI.en.command}` })
+    await $.command.register({ name: 'log-calm', description: `${UI.ko.command} / ${UI.en.command}` })
     const savedAccent = await $.store.get('accent')
     if (isAccent(savedAccent)) await update($, accent, () => savedAccent)
     const savedTheme = await $.store.get('theme')
@@ -123,7 +123,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'calm' }, async ($, e) => {
+  on('command.run', { command: 'log-calm' }, async ($, e) => {
     const lg = await read($, lang)
     const want = e.args.trim()
     if (isAccent(want)) {

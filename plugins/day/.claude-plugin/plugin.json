@@ -1,7 +1,7 @@
 {
   "name": "day",
   "version": "1.0.0",
-  "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /day.",
+  "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /log-day.",
   "author": {
     "name": "Sophie",
     "url": "https://github.com/LetsBeLikeSophie"

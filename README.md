@@ -6,9 +6,9 @@ Three small mods for Claude Code that show what Claude is doing, each in its own
 
 | Mod | Command | Looks like |
 | --- | --- | --- |
-| **RPG** | `/rpg` | A pixel-art camp: your chosen hero acts out each tool Claude uses |
-| **Calm** | `/calm` | A quiet dashboard: white cards on a soft tint, thin rings, serif titles, one accent color |
-| **Day** | `/day` | A warm journal: the sky of the hour, pastel limit cards, pill charts |
+| **RPG** | `/log-rpg` | A pixel-art camp: your chosen hero acts out each tool Claude uses |
+| **Calm** | `/log-calm` | A quiet dashboard: white cards on a soft tint, thin rings, serif titles, one accent color |
+| **Day** | `/log-day` | A warm journal: the sky of the hour, pastel limit cards, pill charts |
 
 All three show the same things:
 
@@ -75,21 +75,21 @@ A tiny file, `~/.claude/my-little-mods.json` (which mod you opened last), may st
 - With several installed, the line above the prompt, the footer mark and the alerts come from the mod whose pane is on screen, so they never pile up.
 - Korean or English, following the system language.
 
-### RPG — `/rpg`
+### RPG — `/log-rpg`
 
 - Work as pictures: reading is studying a book, editing is weapon practice, a command is a spell, tests are a bug hunt. 📜 opens the legend.
-- 5 classes × 5 species, each class moving its own way. Change with the class button or `/rpg mage cat`.
+- 5 classes × 5 species, each class moving its own way. Change with the class button or `/log-rpg mage cat`.
 - The limits as XP bars, levels and XP that add up across sessions, a sky that follows the real time of day.
 - Light and dark (☾/☀).
 
-### Calm — `/calm`
+### Calm — `/log-calm`
 
 - A status card with a thin line icon, the limits as three thin rings, serif headlines and numbers.
-- Pick the accent with 🔵🟢🟣🟠⚪ (or `/calm green`); the whole pane takes a soft tint of it. Light and dark.
+- Pick the accent with 🔵🟢🟣🟠⚪ (or `/log-calm green`); the whole pane takes a soft tint of it. Light and dark.
 
-### Day — `/day`
+### Day — `/log-day`
 
-- A greeting with your name: `/day name Sophie` (otherwise your git name).
+- A greeting with your name: `/log-day name Sophie` (otherwise your git name).
 - The "now" card wears the sky of the hour: dawn, day, sunset or night, with a small sun or moon.
 - Pastel limit cards, a big number beside pill charts, results as pastel strips. Light and dark (🌙/☀️).
 

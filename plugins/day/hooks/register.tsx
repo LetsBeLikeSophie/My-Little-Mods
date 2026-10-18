@@ -93,7 +93,7 @@ export const register: Register = on => {
     void systemLang($)
       .then(found => (found ? update($, lang, () => found) : undefined))
       .catch(() => undefined)
-    await $.command.register({ name: 'day', description: `${UI.ko.command} / ${UI.en.command}` })
+    await $.command.register({ name: 'log-day', description: `${UI.ko.command} / ${UI.en.command}` })
     void guessName($).then(n => update($, name, () => n)).catch(() => undefined)
     const savedAlerts = await $.store.get('alerts')
     if (typeof savedAlerts === 'boolean') await update($, alerts, () => savedAlerts)
@@ -111,7 +111,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'day' }, async ($, e) => {
+  on('command.run', { command: 'log-day' }, async ($, e) => {
     const lg = await read($, lang)
     const m = /^name\s+(.+)$/i.exec(e.args.trim())
     const who = m?.[1]?.trim().slice(0, 24) ?? ''

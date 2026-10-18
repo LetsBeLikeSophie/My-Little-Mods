@@ -9,7 +9,7 @@
     {
       "name": "rpg",
       "source": "./plugins/rpg",
-      "description": "⚔️ RPG — A pixel-art camp: your hero acts out what Claude is doing, levels up as you work, and finds a glowing treasure chest when a quest is done. Open with /rpg.",
+      "description": "⚔️ RPG — A pixel-art camp: your hero acts out what Claude is doing, levels up as you work, and finds a glowing treasure chest when a quest is done. Open with /log-rpg.",
       "category": "productivity",
       "keywords": [
         "rpg",
@@ -25,7 +25,7 @@
     {
       "name": "calm",
       "source": "./plugins/calm",
-      "description": "🍃 Calm — A quiet dashboard: thin rings for your usage limits, serif titles, and one soft accent color you pick. Open with /calm.",
+      "description": "🍃 Calm — A quiet dashboard: thin rings for your usage limits, serif titles, and one soft accent color you pick. Open with /log-calm.",
       "category": "productivity",
       "keywords": [
         "calm",
@@ -40,7 +40,7 @@
     {
       "name": "day",
       "source": "./plugins/day",
-      "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /day.",
+      "description": "🌼 Day — A warm journal: a card wearing the sky of the hour, pastel limit cards and pill charts, and a hello by name. Open with /log-day.",
       "category": "productivity",
       "keywords": [
         "journal",
