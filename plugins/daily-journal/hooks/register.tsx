@@ -358,10 +358,10 @@ export const register: Register = on => {
     const { Box, Text, Button, Svg } = E
     const PASTELS = [pp.pink, pp.lilac, pp.mint] as const
     // Every card alike: white, the same small corner and the same inset on all four sides; the title in serif.
-    // Every card alike in shape and inset; each in its own soft paper color.
-    const card = (key: string, title: string, children: RenderChildren, bg: string = pp.card) => (
-      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={bg} borderStyle="round" borderColor={bg}>
-        {title && <Svg source={headingSvg(title, pp)} alt={title} />}
+    // Every card alike: white paper, the same shape and inset; a small colored dot by the title.
+    const card = (key: string, title: string, children: RenderChildren, dot = '') => (
+      <Box key={key} flexDirection="column" gap="sm" padding="md" backgroundColor={pp.card} borderStyle="round" borderColor={pp.card}>
+        {title && <Svg source={headingSvg(title, pp, dot)} alt={title} />}
         {children}
       </Box>
     )
@@ -438,13 +438,14 @@ export const register: Register = on => {
               ))}
             </Box>
           ),
+          J.pinkInk,
         )}
 
         {card(
           'log',
           L.log,
           LogLines(E, list, Boolean(opened), () => update($, logOpen, (v: string) => (v ? '' : 'all')), { ink: pp.ink, soft: pp.soft, error: '#C0392B' }, { empty: L.logEmpty, more: L.logMore, less: L.logLess, ally: L.ally, seconds: (ms: number) => seconds(lg, ms) }),
-          pp.butter,
+          J.sun,
         )}
 
         {card(
@@ -453,7 +454,7 @@ export const register: Register = on => {
           <Text size="footnote" color={pp.ink}>
             {L.totalsLine(lifeNow.quests, lifeNow.slain, lifeNow.actions)}
           </Text>,
-          pp.mint,
+          J.mintInk,
         )}
 
         {/* A soft sticker strip: the bell and the maker, like a note at the page's foot. */}

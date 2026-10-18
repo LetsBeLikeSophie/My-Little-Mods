@@ -71,8 +71,9 @@ function text(x: number, y: number, size: number, weight: number, fill: string, 
 }
 
 /** A card's title, as a thin strip of its own. */
-export function headingSvg(title: string, pp: Paper = PAPERS.light): string {
-  return svg(22, text(0, 16, 15, 700, pp.ink, title))
+export function headingSvg(title: string, pp: Paper = PAPERS.light, dot = ''): string {
+  // a small colored dot before the title: the card's one touch of color
+  return dot ? svg(22, `<circle cx="5" cy="11" r="4.5" fill="${dot}"/>` + text(16, 16, 15, 700, pp.ink, title)) : svg(22, text(0, 16, 15, 700, pp.ink, title))
 }
 
 function svg(h: number, body: string): string {
