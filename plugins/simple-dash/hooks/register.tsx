@@ -413,7 +413,7 @@ export const register: Register = on => {
             : L.now
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT} minHeight="100%" flexGrow={1}>
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={TINT} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
         <Svg source={statusSvg({ status, label, headline: STATUS[lg][status], detail: sub }, pal)} alt={`${STATUS[lg][status]} ${sub}`} />
         <Svg
           source={ringsSvg(
@@ -477,7 +477,6 @@ export const register: Register = on => {
           {ACCENT_IDS.map(id => (
             <Button
               key={`accent-${id}`}
-              label={ACCENT_NAMES[lg][id]}
               variant={id === ac ? 'primary' : 'secondary'}
               onPress={async () => {
                 await update($, accent, () => id)
@@ -489,7 +488,6 @@ export const register: Register = on => {
           ))}
           <Button
             key="toggle-theme"
-            label={th === 'dark' ? L.light : L.dark}
             variant="secondary"
             onPress={async () => {
               const next = th === 'dark' ? 'light' : 'dark'

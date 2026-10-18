@@ -511,7 +511,7 @@ export const register: Register = on => {
       update($, show, (s: { legend: boolean; picker: boolean }) => ({ ...s, [key]: !s[key] }))
 
     return (
-      <Box flexDirection="column" gap="md" padding="md" backgroundColor={BG}>
+      <Box flexDirection="column" gap="md" padding="md" backgroundColor={BG} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
         <Svg
           source={campSvg(
             sp,
@@ -631,15 +631,14 @@ export const register: Register = on => {
           <Text color={GOLD} weight="bold">
             {L.menu}
           </Text>
-          <Button key="toggle-picker" label={sh.picker ? L.pickerClose : L.pickerOpen} variant={sh.picker ? 'primary' : 'secondary'} onPress={toggle('picker')}>
+          <Button key="toggle-picker" variant={sh.picker ? 'primary' : 'secondary'} onPress={toggle('picker')}>
             {JOBS[jb].emoji}
           </Button>
-          <Button key="toggle-legend" label={sh.legend ? L.legendClose : L.legendOpen} variant={sh.legend ? 'primary' : 'secondary'} onPress={toggle('legend')}>
+          <Button key="toggle-legend" variant={sh.legend ? 'primary' : 'secondary'} onPress={toggle('legend')}>
             📜
           </Button>
           <Button
             key="toggle-theme"
-            label={th === 'dark' ? L.light : L.dark}
             variant="secondary"
             onPress={async () => {
               const next = th === 'dark' ? 'light' : 'dark'

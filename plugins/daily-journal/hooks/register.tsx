@@ -376,7 +376,7 @@ export const register: Register = on => {
     const isResting = status === 'waiting' || status === 'done'
 
     return (
-      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={J.cream} minHeight="100%" flexGrow={1}>
+      <Box flexDirection="column" gap="sm" padding="md" backgroundColor={J.cream} minHeight={e.surface === 'desktop' ? e.props.scroll.bodyRows : undefined} flexGrow={1}>
         <Svg source={greetingSvg(L.hello(who), dateLine(lg, at), (who[0] ?? '☺').toUpperCase())} alt={L.hello(who)} />
         <Svg
           source={nowSvg({
